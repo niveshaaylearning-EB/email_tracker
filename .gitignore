@@ -1,0 +1,25 @@
+﻿# Secrets: never commit
+.env
+.env.*
+!.env.example
+*.bin
+signin_cache*
+*.pem
+*.key
+
+# Runtime data: sign-in, progress and sort log (contains client emails)
+data/
+state.json
+log/
+*.jsonl
+*.csv
+
+# Python / editor clutter
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

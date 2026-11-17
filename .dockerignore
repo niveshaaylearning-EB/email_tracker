@@ -1,0 +1,10 @@
+# Keep secrets and local data out of the image; settings come from Easypanel's Environment
+.env
+.env.*
+data/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.vscode/
+SETUP_GUIDE.md
