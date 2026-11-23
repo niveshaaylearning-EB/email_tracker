@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Mailbox tracker</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-anthropic-serif: Georgia, "Times New Roman", serif;
+  --cds-font-size-title: 1.75rem; --cds-font-size-heading: 1.05rem; --cds-font-size-body: .9375rem; --cds-font-size-caption: .8125rem;
+  --cds-font-weight-medium: 600;
+  --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 16px; --cds-gap-lg: 24px;
+  --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 14px; --cds-pad-lg: 18px;
+  --cds-radius: 8px; --cds-dur-fast: .15s; --cds-dur-slow: .3s; --cds-ease-out: cubic-bezier(.2, .8, .2, 1);
+  --color-bg: #f6f6f3; --color-panel: #ffffff; --color-fg: #1d1d1b; --color-fg-muted: #6b6b66; --color-border-line: #e2e1dc;
+  --color-ok: #1f8a4c; --color-bad: #c43c3c;
+  --cds-surface-popover: #ffffff; --cds-border: #e2e1dc; --cds-shadow-popover: 0 6px 24px rgba(0,0,0,.12); --cds-text-secondary: #6b6b66;
+  --cds-chart-grid: #ecebe6; --cds-chart-axis: #c9c8c2; --cds-chart-reference: #8a8a84; --cds-chart-status-critical: #d6455b; --cds-chart-muted: #d5d4cf;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1b1b1a; --color-panel: #252524; --color-fg: #ecebe6; --color-fg-muted: #a3a29c; --color-border-line: #3a3a38;
+    --color-ok: #4cc283; --color-bad: #ef6b6b;
+    --cds-surface-popover: #2c2c2b; --cds-border: #3a3a38; --cds-shadow-popover: 0 6px 24px rgba(0,0,0,.5); --cds-text-secondary: #a3a29c;
+    --cds-chart-grid: #333331; --cds-chart-axis: #4a4a47; --cds-chart-reference: #8f8e88; --cds-chart-muted: #4a4a47;
+  }
+}
+html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
+#dash-root { max-width: 1240px; margin: 0 auto; padding: 24px 16px 48px; box-sizing: border-box; }
+.dash-skeleton { color: transparent !important; background: var(--color-border-line); border-radius: 4px; }
+.sv-status { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font: var(--cds-font-size-caption)/1.4 var(--font-anthropic-sans); color: var(--color-fg-muted); margin-bottom: 12px; }
+.sv-status a { color: inherit; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="dash.js"></script>
+</head>
+<body>
+<div id="dash-root">
+<div class="sv-status" id="sv-status"><span id="sv-refresh">Checking when the data was last refreshed…</span><a href="admin">Admin</a></div>
+<!--PAGE-->
+</div>
+<script>
+fetch('status', { cache: 'no-store' }).then((r) => r.json()).then((s) => {
+  const el = document.getElementById('sv-refresh');
+  if (!s.last_run) { el.textContent = 'First collection still running. Reload in a few minutes.'; return; }
+  const t = new Date(s.last_run).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  el.textContent = `Updates itself every day · last refreshed ${t} IST` + (s.busy ? ' · refreshing now' : '');
+}).catch(() => {});
+</script>
+</body>
+</html>

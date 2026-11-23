@@ -1,6 +1,8 @@
-# Inbox sorter: setup guide
+# Inbox sorter and mailbox dashboard: setup guide
 
 **What it does:** checks the research.smallcase@niveshaay.com Inbox every 5 minutes. It uses Claude to decide whether each new client email is a **complaint** or a **query**, then puts a copy in the `Complaints` or `Queries` folder. The original stays in the Inbox. If the server is down for a while, the sorter works through everything it missed, oldest first, as soon as it is back.
+
+**It also runs the mailbox dashboard:** once a day it saves every new email in Inbox, Sent Items and Archive to a permanent record on the server. It rebuilds the reply-time numbers and serves the dashboard on a password-protected web address. Click any number to read the emails behind it.
 
 **Where it runs:** as a small always-on app on our Easypanel server.
 
@@ -51,10 +53,10 @@ It prints how each of 10 Inbox emails would be sorted, without copying anything.
 
 ## Part 3: Deploy on Easypanel
 
-1. Put the `cloud/` folder in a **private** GitHub repository. The `.gitignore` already keeps `data/` and `.env` out of it.
+1. The code is in GitHub (`niveshaaylearning-EB/email_tracker`). The `.gitignore` keeps `data/` and `.env` out of it.
 2. In Easypanel, open your project and choose **+ Service → App**.
    - Name: `inbox-sorter`
-   - **Source:** GitHub, then pick the repository and branch. If the repository holds more than this app, set the build path to `/cloud`.
+   - **Source:** GitHub, the repository above, branch `main`, build path `/`.
    - **Build:** Dockerfile
 3. **Environment:** paste these values (`.env.example` lists them all):
 
@@ -64,8 +66,10 @@ It prints how each of 10 Inbox emails would be sorted, without copying anything.
    CLIENT_SECRET=
    MAILBOX=research.smallcase@niveshaay.com
    ANTHROPIC_API_KEY=...
-   START_FROM=2026-11-06T00:00:00Z
+   START_FROM=2026-11-24T03:30:00Z
    INTERVAL_MINUTES=5
+   DASHBOARD_PASSWORD=<a long password>
+   REFRESH_HOURS=24
    ```
 
    `START_FROM` is used only on the very first run. It is the point from which emails get sorted, so set it to the go-live date. Leave it empty to start from the moment it is deployed.
@@ -74,7 +78,7 @@ It prints how each of 10 Inbox emails would be sorted, without copying anything.
    - Mount path: `/data`
 
    Progress is saved here. Without the volume, every redeploy would start again from `START_FROM`.
-5. **Domains / ports:** none needed. The sorter does not serve any web pages.
+5. **Domains:** add a domain (for example `mailbox.<your domain>`) pointing to port **8080**, with HTTPS on. That is the dashboard address. It asks for `DASHBOARD_PASSWORD`; the user name can be anything unless you set `DASHBOARD_USER`.
 6. Click **Deploy**. The first time, the Logs show `Not signed in, or the sign-in expired`. To sign in:
    - Open the app's **Console** (terminal) in Easypanel.
    - Run `python sorter.py --login`.
@@ -86,7 +90,18 @@ It prints how each of 10 Inbox emails would be sorted, without copying anything.
    ```
    Inbox sorter started for research.smallcase@niveshaay.com, checking every 5 min
    Sorted: {'COMPLAINT': 0, 'QUERY': 3, 'skipped': 2, 'failed': 0}
+   Inbox: 2650 emails since 2026-07-01
+   Tracker: fetched 4100, new 4100, dashboard {...}
    ```
+
+### Load the older history once
+
+Outlook moves older mail into the online archive, which the app can't read. To keep the history from 23 Jul 2026 on the dashboard:
+
+1. Open the dashboard address and choose **Admin**.
+2. Under **Add the older history**, upload `data/emails_master.jsonl` from the laptop's Email tracker folder.
+
+Emails already stored are never replaced. After this, the server keeps everything itself, including mail that later moves to the archive.
 
 ### Check it works
 
@@ -107,6 +122,9 @@ It prints how each of 10 Inbox emails would be sorted, without copying anything.
 | Change the sorting rules | Edit the `system` text in `base_request.json`, push to GitHub, redeploy |
 | Pause sorting | Stop the app in Easypanel. When you start it again, it catches up |
 | Logs say `Not signed in, or the sign-in expired` | Open the Console in Easypanel, run `python sorter.py --login`, and sign in as research.smallcase@. Nothing is lost: it catches up afterwards |
+| Dashboard data looks old | The top of the dashboard shows when it was last refreshed. **Admin → Refresh now** collects new mail straight away |
+| Change the dashboard password | Change `DASHBOARD_PASSWORD` in Easypanel and redeploy |
+| Where the email record lives | `/data/tracker/emails_master.jsonl` on the volume holds every email collected, and is only ever added to. Back up the volume like any other company data |
 | See what was sorted | `/data/log/YYYY-MM.jsonl` on the volume holds one line per email, with label, confidence and reason |
 
 **What gets skipped (stays in the Inbox only):** our own emails, internal @niveshaay.com mail, no-reply and automated senders, smallcase ticket acknowledgements and feedback surveys.

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Tracker admin</title>
+<style>
+:root { color-scheme: light dark; --bg: #f6f6f3; --panel: #fff; --fg: #1d1d1b; --muted: #6b6b66; --line: #e2e1dc; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1b1b1a; --panel: #252524; --fg: #ecebe6; --muted: #a3a29c; --line: #3a3a38; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding: 32px 16px; display: flex; flex-direction: column; gap: 16px; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+h1 { font: 400 1.6rem Georgia, serif; margin: 0; } h2 { font-size: 1.05rem; margin: 0; }
+p { margin: 0; color: var(--muted); } button, input { font: inherit; }
+button { align-self: start; padding: 6px 14px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--fg); cursor: pointer; }
+pre { margin: 0; white-space: pre-wrap; font-size: 13px; color: var(--muted); }
+a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tracker admin</h1>
+  <a href="./">← Back to the dashboard</a>
+  <section>
+    <h2>Status</h2>
+    <pre id="status">Loading…</pre>
+  </section>
+  <section>
+    <h2>Refresh now</h2>
+    <p>Collects new emails and rebuilds the dashboard straight away, instead of waiting for the daily run.</p>
+    <button id="refresh" type="button">Refresh now</button>
+    <p id="refresh-msg"></p>
+  </section>
+  <section>
+    <h2>Add the older history (once)</h2>
+    <p>Outlook moves old mail to the online archive, which the tracker can't read. Upload <b>data/emails_master.jsonl</b> from the laptop once so the dashboard keeps the history from 23 Jul 2026. Emails already stored are never replaced.</p>
+    <input id="file" type="file" accept=".jsonl,application/json,text/plain">
+    <button id="upload" type="button">Upload</button>
+    <p id="upload-msg"></p>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const status = () => fetch('status', { cache: 'no-store' }).then((r) => r.json()).then((s) => { $('status').textContent = JSON.stringify(s, null, 2); }).catch((e) => { $('status').textContent = String(e); });
+status();
+$('refresh').addEventListener('click', async () => {
+  const r = await fetch('admin/refresh', { method: 'POST' });
+  $('refresh-msg').textContent = (await r.json()).message;
+  setTimeout(status, 3000);
+});
+$('upload').addEventListener('click', async () => {
+  const f = $('file').files[0];
+  if (!f) { $('upload-msg').textContent = 'Choose the file first.'; return; }
+  $('upload-msg').textContent = 'Uploading…';
+  const r = await fetch('admin/seed', { method: 'POST', body: f, headers: { 'Content-Type': 'application/octet-stream' } });
+  $('upload-msg').textContent = (await r.json()).message;
+  setTimeout(status, 3000);
+});
+</script>
+</body>
+</html>

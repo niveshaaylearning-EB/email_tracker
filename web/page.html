@@ -1,0 +1,1042 @@
+<style>
+.nv { display: flex; flex-direction: column; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+.nv-head { display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+.nv-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+.nv-take { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); max-width: 70ch; line-height: 1.5; }
+.nv-take span { color: var(--color-fg); }
+.nv-asof { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nv-bar { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: end; }
+.nv-bar label { display: flex; flex-direction: column; gap: 2px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nv-bar select, .nv-search { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 0; }
+.nv-btn { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: transparent; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+.nv-btn:hover { background: var(--color-panel); }
+.nv-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); }
+.nv-tab { font: inherit; font-size: var(--cds-font-size-body); background: none; border: 0; border-bottom: 2px solid transparent; color: var(--color-fg-muted); padding: var(--cds-pad-sm) var(--cds-pad-sm); cursor: pointer; margin-bottom: -1px; }
+.nv-tab[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+.nv-tab:focus-visible, .nv-btn:focus-visible, .nv th button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.nv-page { display: flex; flex-direction: column; gap: var(--cds-gap-md); }
+.nv-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); }
+.nv-kpi { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+.nv-kpi h3 { margin: 0; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); }
+.nv-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.1; }
+.nv-unit { font-size: var(--cds-font-size-body); color: var(--color-fg-muted); margin-left: 4px; }
+.nv-delta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-height: 1.2em; }
+.nv-delta .good { color: var(--color-ok); } .nv-delta .bad { color: var(--color-bad); }
+.nv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.nv-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+.nv-card h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.nv-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
+.nv-chart { position: relative; min-height: 220px; }
+.nv-chart.tall { min-height: 300px; }
+.nv-chart svg { display: block; overflow: visible; }
+.nv-tt { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+.nv-tt .k { color: var(--cds-text-secondary); }
+.nv-tablebox { max-height: 30rem; overflow: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+.nv table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); }
+.nv th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); border-bottom: 1px solid var(--color-border-line); padding: 0; white-space: nowrap; }
+.nv th button { font: inherit; color: var(--color-fg-muted); background: none; border: 0; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; width: 100%; text-align: inherit; }
+.nv th[aria-sort] button { color: var(--color-fg); }
+.nv td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+.nv td.num, .nv th.num { text-align: right; }
+.nv td.subj { min-width: 14rem; }
+.nv tr.click { cursor: pointer; } .nv tr.click:hover td { background: var(--color-bg); }
+.nv .hot { color: var(--color-bad); font-weight: var(--cds-font-weight-medium); }
+.nv-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); gap: var(--cds-gap-sm); }
+.nv-chip { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm); display: flex; flex-direction: column; gap: 2px; }
+.nv-chip .nv-big { font-size: var(--cds-font-size-heading); font-family: var(--font-anthropic-serif); }
+.nv-chip.warn { border-color: var(--color-bad); }
+.nv-chip span:first-child { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nv-multi { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: var(--cds-gap-md); }
+.nv-multi > div { position: relative; min-height: 96px; }
+.nv-multi h4 { margin: 0 0 2px; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); }
+.nv-method { max-width: 70ch; line-height: 1.55; font-size: var(--cds-font-size-body); }
+.nv-method h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-md) 0 var(--cds-gap-xs); }
+.nv-method p, .nv-method ul { margin: 0 0 var(--cds-gap-sm); }
+.nv-picked { font-size: var(--cds-font-size-caption); }
+.nv-hint { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nv-kpi.click, .nv-chip.click { cursor: pointer; transition: border-color var(--cds-dur-fast, .15s); }
+.nv-kpi.click:hover, .nv-chip.click:hover { border-color: var(--color-fg-muted); }
+.nv-kpi.click:focus-visible, .nv-chip.click:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.nv-dlg { padding: 0; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); width: min(52rem, calc(100vw - 32px)); max-height: 86vh; box-shadow: var(--cds-shadow-popover); font-family: var(--font-anthropic-sans); }
+.nv-dlg::backdrop { background: rgba(0, 0, 0, .35); }
+.nv-dlg-in { display: flex; flex-direction: column; gap: var(--cds-gap-sm); padding: var(--cds-pad-lg); max-height: 86vh; box-sizing: border-box; }
+.nv-dlg-head { display: flex; gap: var(--cds-gap-sm); align-items: start; justify-content: space-between; }
+.nv-dlg-head h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.nv-dlg-count { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nv-dlg-list { overflow: auto; display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-height: 4rem; }
+.nv-mail { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-panel); padding: var(--cds-pad-sm) var(--cds-pad-md); display: flex; flex-direction: column; gap: 4px; }
+.nv-mail-top { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nv-mail-top > * + *::before { content: "·"; margin: 0 6px; color: var(--color-fg-muted); font-weight: 400; }
+.nv-mail-top b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); word-break: break-all; }
+.nv-mail-subj { font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
+.nv-mail-body { margin: 0; font-size: var(--cds-font-size-caption); line-height: 1.45; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
+.nv-mail-lbl { color: var(--color-fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.nv-fail { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: inherit; height: 100%; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.nv-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+@media (prefers-reduced-motion: no-preference) {
+  .nv-page { animation: nv-in var(--cds-dur-slow) var(--cds-ease-out); }
+  @keyframes nv-in { from { opacity: .4; } to { opacity: 1; } }
+}
+</style>
+
+<div class="nv">
+  <header class="nv-head" id="top">
+    <h1 class="nv-title">smallcase mailbox tracker</h1>
+    <p class="nv-take dash-skeleton" id="takeaway">—</p>
+    <span class="nv-asof">research.smallcase@niveshaay.com · emails up to <span data-source="periods" data-field="as_of" data-where="id=all" id="asof">—</span> · reply times in working hours (Mon–Sat, 09:30–18:30 IST)</span>
+  </header>
+
+  <div class="nv-bar" id="filters">
+    <label for="f-period">Period<select id="f-period" data-source="periods"></select></label>
+    <label for="f-channel">Came in
+      <select id="f-channel">
+        <option value="All">All channels</option>
+        <option value="Direct">Direct from client</option>
+        <option value="via smallcase">Handed over by smallcase</option>
+      </select>
+    </label>
+    <label for="f-category">Query type<select id="f-category" data-source="summary"></select></label>
+    <button class="nv-btn" id="f-reset" type="button">Reset</button>
+  </div>
+  <p class="nv-hint" id="hint">Click any number, bar, chip, cell or row to read the emails behind it.</p>
+
+  <dialog class="nv-dlg" id="drill" aria-labelledby="drill-title">
+    <div class="nv-dlg-in">
+      <div class="nv-dlg-head">
+        <div>
+          <h2 id="drill-title">Emails</h2>
+          <div class="nv-dlg-count"><span id="drill-count" data-source="threads"></span><span id="drill-sub"></span></div>
+        </div>
+        <button class="nv-btn" id="drill-close" type="button" aria-label="Close">Close</button>
+      </div>
+      <div class="nv-bar">
+        <input class="nv-search" id="drill-search" type="search" placeholder="Search client, subject, ticket or text" aria-label="Search these emails">
+        <button class="nv-btn" id="drill-filter" type="button" hidden>Filter dashboard to this type</button>
+      </div>
+      <div class="nv-dlg-list" id="drill-list"></div>
+      <button class="nv-btn" id="drill-more" type="button" hidden>Show more</button>
+    </div>
+  </dialog>
+
+  <nav class="nv-tabs" role="tablist" aria-label="Sections">
+    <button class="nv-tab" role="tab" id="tab-overview" data-page="overview">Overview</button>
+    <button class="nv-tab" role="tab" id="tab-queue" data-page="queue">Pending replies</button>
+    <button class="nv-tab" role="tab" id="tab-types" data-page="types">Query types</button>
+    <button class="nv-tab" role="tab" id="tab-chasers" data-page="chasers">Chasers</button>
+    <button class="nv-tab" role="tab" id="tab-workload" data-page="workload">Workload</button>
+    <button class="nv-tab" role="tab" id="tab-clients" data-page="clients">Clients</button>
+    <button class="nv-tab" role="tab" id="tab-method" data-page="method">How it's measured</button>
+  </nav>
+
+  <!-- Overview -->
+  <section class="nv-page" id="overview" role="tabpanel">
+    <div class="nv-kpis" id="kpis">
+      <div class="nv-kpi" id="kpi-threads"><h3>Client conversations</h3><div><span class="nv-big dash-skeleton" data-source="summary" data-field="threads">—</span></div><div class="nv-delta" data-k="d_threads"></div></div>
+      <div class="nv-kpi" id="kpi-median"><h3>Median first reply</h3><div><span class="nv-big dash-skeleton" data-source="summary" data-field="median_bh">—</span><span class="nv-unit">working h</span></div><div class="nv-delta" data-k="d_median_bh"></div></div>
+      <div class="nv-kpi" id="kpi-w4"><h3>First reply within 4 working h</h3><div><span class="nv-big dash-skeleton" data-source="summary" data-field="within4">—</span><span class="nv-unit">%</span></div><div class="nv-delta" data-k="d_within4"></div></div>
+      <div class="nv-kpi" id="kpi-w9"><h3>First reply within 1 working day</h3><div><span class="nv-big dash-skeleton" data-source="summary" data-field="within9">—</span><span class="nv-unit">%</span></div><div class="nv-delta"></div></div>
+      <div class="nv-kpi" id="kpi-chased"><h3>Conversations with chasers</h3><div><span class="nv-big dash-skeleton" data-source="summary" data-field="chased">—</span></div><div class="nv-delta" data-k="d_chased"></div></div>
+      <div class="nv-kpi" id="kpi-awaiting"><h3>No reply on record yet</h3><div><span class="nv-big dash-skeleton" data-source="summary" data-field="awaiting">—</span></div><div class="nv-delta">opened in this period</div></div>
+    </div>
+    <div class="nv-grid">
+      <div class="nv-card" id="card-trend">
+        <h2>First reply time, week by week</h2>
+        <p class="nv-note">Median working hours to our first reply for conversations opened that week. Dashed line: 4-hour target. Follows channel and query type; shows every week.</p>
+        <div class="nv-chart tall" id="chart-trend" data-source="weekly"></div>
+      </div>
+      <div class="nv-card" id="card-sla">
+        <h2>How fast we reply</h2>
+        <p class="nv-note">Share of answered conversations by time to first reply, in working hours. One working day is 9 hours.</p>
+        <div class="nv-chart" id="chart-sla" data-source="sla"></div>
+      </div>
+    </div>
+    <div class="nv-card" id="card-volume">
+      <h2>New conversations per week</h2>
+      <p class="nv-note">Client conversations opened each week, by channel and query type filters.</p>
+      <div class="nv-chart" id="chart-weekly" data-source="weekly"></div>
+    </div>
+  </section>
+
+  <!-- Pending -->
+  <section class="nv-page" id="queue" role="tabpanel" hidden>
+    <div class="nv-card" id="card-ageing">
+      <h2>How long they have been waiting</h2>
+      <p class="nv-note">Conversations whose latest client message has no email reply from us yet, by age as of the data date. Older items may have been handled by phone or in another thread. Follows channel and query type, not period.</p>
+      <div class="nv-chips" id="ageing" data-source="ageing"></div>
+    </div>
+    <div class="nv-card" id="card-queue">
+      <h2>Pending replies</h2>
+      <div class="nv-bar"><input class="nv-search" id="q-search" type="search" placeholder="Search client, subject or ticket" aria-label="Search pending replies"></div>
+      <div class="nv-tablebox">
+        <table id="t-queue" data-source="threads" data-row-key="id">
+          <thead><tr>
+            <th class="num" data-field="waiting_days"><button type="button">Waiting (days)</button></th>
+            <th data-field="day"><button type="button">Opened</button></th>
+            <th data-field="client"><button type="button">Client</button></th>
+            <th data-field="subject"><button type="button">Subject</button></th>
+            <th data-field="category"><button type="button">Query type</button></th>
+            <th data-field="channel"><button type="button">Came in</button></th>
+            <th class="num" data-field="chasers"><button type="button">Chasers</button></th>
+            <th data-field="ticket"><button type="button">Ticket</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Query types -->
+  <section class="nv-page" id="types" role="tabpanel" hidden>
+    <div class="nv-card" id="card-cats">
+      <h2>What clients ask about</h2>
+      <p class="nv-note">Conversations by query type in the selected period and channel. Click a bar or row to read those emails; from there you can filter the whole dashboard to that type.</p>
+      <div class="nv-chart" id="chart-cats" data-source="summary"></div>
+    </div>
+    <div class="nv-card" id="card-cattable">
+      <h2>Query types compared</h2>
+      <div class="nv-tablebox">
+        <table id="t-cats" data-source="summary" data-row-key="key">
+          <thead><tr>
+            <th data-field="category"><button type="button">Query type</button></th>
+            <th class="num" data-field="threads"><button type="button">Conversations</button></th>
+            <th class="num" data-field="share"><button type="button">Share %</button></th>
+            <th class="num" data-field="median_bh"><button type="button">Median first reply (h)</button></th>
+            <th class="num" data-field="p90_bh"><button type="button">Slowest 10% (h)</button></th>
+            <th class="num" data-field="within4"><button type="button">Within 4 h %</button></th>
+            <th class="num" data-field="chased"><button type="button">With chasers</button></th>
+            <th class="num" data-field="awaiting"><button type="button">No reply yet</button></th>
+            <th class="num" data-field="closed"><button type="button">Closed by client</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="nv-card" id="card-multi">
+      <h2>Weekly volume by query type</h2>
+      <p class="nv-note">Conversations opened per week, one panel per type, all on the same scale. Follows the channel filter.</p>
+      <div class="nv-multi" id="multi" data-source="weekly"></div>
+    </div>
+  </section>
+
+  <!-- Chasers -->
+  <section class="nv-page" id="chasers" role="tabpanel" hidden>
+    <div class="nv-card" id="card-chasers">
+      <h2>Conversations where the client chased</h2>
+      <p class="nv-note">A chaser is another client message sent before we replied. Sorted by the number of chasers. Follows all filters.</p>
+      <div class="nv-bar"><input class="nv-search" id="c-search" type="search" placeholder="Search client, subject or ticket" aria-label="Search chased conversations"></div>
+      <div class="nv-tablebox">
+        <table id="t-chasers" data-source="threads" data-row-key="id">
+          <thead><tr>
+            <th class="num" data-field="chasers"><button type="button">Chasers</button></th>
+            <th data-field="status"><button type="button">Status</button></th>
+            <th data-field="day"><button type="button">Opened</button></th>
+            <th data-field="client"><button type="button">Client</button></th>
+            <th data-field="subject"><button type="button">Subject</button></th>
+            <th data-field="category"><button type="button">Query type</button></th>
+            <th class="num" data-field="first_response_bh"><button type="button">First reply (h)</button></th>
+            <th class="num" data-field="our_replies"><button type="button">Our replies</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Workload -->
+  <section class="nv-page" id="workload" role="tabpanel" hidden>
+    <div class="nv-card" id="card-daily">
+      <h2>Emails per day</h2>
+      <p class="nv-note">Client emails received (including smallcase hand-overs) and replies we sent, per day in the selected period. Automated and spam mail is left out.</p>
+      <div class="nv-chart tall" id="chart-daily" data-source="daily"></div>
+    </div>
+    <div class="nv-card" id="card-heat">
+      <h2>When new queries arrive</h2>
+      <p class="nv-note">New client conversations by weekday and hour (IST) in the selected period. Darker means more. Follows the period filter only.</p>
+      <div class="nv-chart" id="chart-heat" data-source="heat"></div>
+    </div>
+  </section>
+
+  <!-- Clients -->
+  <section class="nv-page" id="clients" role="tabpanel" hidden>
+    <div class="nv-card" id="card-clients">
+      <h2>Clients who write most</h2>
+      <p class="nv-note">All conversations since the first email on record, per client address. Does not follow the filters.</p>
+      <div class="nv-bar"><input class="nv-search" id="k-search" type="search" placeholder="Search client" aria-label="Search clients"></div>
+      <div class="nv-tablebox">
+        <table id="t-clients" data-source="clients" data-row-key="client">
+          <thead><tr>
+            <th data-field="client"><button type="button">Client</button></th>
+            <th class="num" data-field="threads"><button type="button">Conversations</button></th>
+            <th class="num" data-field="chasers"><button type="button">Chasers</button></th>
+            <th class="num" data-field="awaiting"><button type="button">No reply yet</button></th>
+            <th data-field="main_category"><button type="button">Main query type</button></th>
+            <th data-field="last_activity"><button type="button">Last email</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Method -->
+  <section class="nv-page" id="method" role="tabpanel" hidden>
+    <div class="nv-card nv-method">
+      <h2>How it's measured</h2>
+      <h3>What's included</h3>
+      <p>Emails in the research.smallcase@niveshaay.com mailbox: Inbox, Sent Items and Archive. The Subscription folder (automatic smallcase notices) and the In-Place Archive (mail before 23 Jul 2026) are not included. The copy of the data is kept permanently, so it stays here after Outlook moves older mail to the archive.</p>
+      <h3>Conversations</h3>
+      <p>Emails are grouped into one conversation by subject and client address, and by smallcase ticket number (TKT-…) where there is one. Mail from vendors, cold sales and system senders is left out.</p>
+      <h3>What counts as a client query</h3>
+      <ul>
+        <li>An email from a client, sent to us directly.</li>
+        <li>An email from smallcase that hands a query to us ("Hi Team Niveshaay", "smallcase manager", "please provide an update").</li>
+        <li>Not counted: smallcase replying to a client itself, ticket acknowledgements, feedback surveys and auto-replies.</li>
+      </ul>
+      <h3>Reply time</h3>
+      <p>First reply is the time from the first client message to our first email back, counted in working hours (Monday to Saturday, 09:30–18:30 IST). The target line is 4 working hours. A chaser is another client message sent before we reply.</p>
+      <h3>Status</h3>
+      <ul>
+        <li><b>Replied</b>: our last email came after the client's last message.</li>
+        <li><b>Closed by client</b>: the client's last message only thanks, confirms or agrees.</li>
+        <li><b>No reply on record</b>: the client's last message has no email reply after it. It may have been handled by phone.</li>
+      </ul>
+      <h3>Email previews</h3>
+      <p>Clicking a number, bar, chip or row lists the conversations behind it, with the client's first message, their latest message and our last reply. These are the previews Outlook keeps (about the first 250 characters of each email, without quoted earlier mail), so long emails are cut short.</p>
+      <h3>Query types</h3>
+      <p>Assigned by keywords in the subject and the first lines of the first message, in this order: refund or cancellation, renewal pricing or discount, payment or mandate, KYC, broker or account, platform issue, stock or portfolio advice, subscription or plan info, then other. Only email previews (about 250 characters) were read, so some conversations are mislabelled.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+// Datasets worked out from the conversation rows
+dash.calc('periods', {
+  title: 'Period choices',
+  description: 'Date ranges for the period filter, counted back from the latest conversation.',
+  inputs: ['threads'],
+  fn: (threads) => {
+    const days = threads.map((t) => t.day).sort();
+    const first = days[0], last = days[days.length - 1];
+    const shift = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+    const rows = [
+      { id: 'all', label: 'All time', from: first, to: last, prev: null, show: true },
+      { id: 'last_30', label: 'Last 30 days', from: shift(last, -29), to: last, prev: 'prev_30', show: true },
+      { id: 'prev_30', label: 'Previous 30 days', from: shift(last, -59), to: shift(last, -30), prev: null, show: false },
+      { id: 'last_7', label: 'Last 7 days', from: shift(last, -6), to: last, prev: 'prev_7', show: true },
+      { id: 'prev_7', label: 'Previous 7 days', from: shift(last, -13), to: shift(last, -7), prev: null, show: false },
+    ];
+    const months = [...new Set(days.map((d) => d.slice(0, 7)))];
+    months.forEach((m, i) => rows.push({
+      id: 'm' + m,
+      label: new Date(m + '-01T00:00:00Z').toLocaleString('en', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
+      from: m + '-01', to: m + '-31', prev: i ? 'm' + months[i - 1] : null, show: true,
+    }));
+    return rows.map((r) => ({ ...r, as_of: last }));
+  },
+});
+
+dash.calc('summary', {
+  title: 'Reply-time summary',
+  description: 'Conversations, first-reply times (working hours), chasers and status for each period, channel and query type, with the change from the period before.',
+  inputs: ['threads', 'periods'],
+  fn: (threads, periods) => {
+    const q = (v, p) => { if (!v.length) return null; const s = [...v].sort((a, b) => a - b), k = (s.length - 1) * p, f = Math.floor(k); return s[f] + ((s[f + 1] ?? s[f]) - s[f]) * (k - f); };
+    const r1 = (v) => (v == null ? null : Math.round(v * 10) / 10);
+    const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : null);
+    const stats = (rows) => {
+      const fr = rows.map((t) => t.first_response_bh).filter((v) => v != null);
+      return {
+        threads: rows.length, answered: fr.length, median_bh: r1(q(fr, 0.5)), p90_bh: r1(q(fr, 0.9)),
+        within4: pct(fr.filter((v) => v <= 4).length, fr.length), within9: pct(fr.filter((v) => v <= 9).length, fr.length),
+        awaiting: rows.filter((t) => t.status === 'Awaiting our reply').length,
+        chased: rows.filter((t) => t.chasers > 0).length,
+        closed: rows.filter((t) => t.status === 'Closed by client').length,
+      };
+    };
+    const cats = ['All', ...new Set(threads.map((t) => t.category))];
+    const chans = ['All', 'Direct', 'via smallcase'];
+    const by = {};
+    for (const p of periods) for (const ch of chans) for (const c of cats) {
+      const rows = threads.filter((t) => t.day >= p.from && t.day <= p.to && (ch === 'All' || t.channel === ch) && (c === 'All' || t.category === c));
+      by[`${p.id}|${ch}|${c}`] = { key: `${p.id}|${ch}|${c}`, period: p.id, channel: ch, category: c, ...stats(rows) };
+    }
+    return periods.filter((p) => p.show).flatMap((p) => chans.flatMap((ch) => cats.map((c) => {
+      const row = by[`${p.id}|${ch}|${c}`], all = by[`${p.id}|${ch}|All`], prev = p.prev && by[`${p.prev}|${ch}|${c}`];
+      const d = (f) => (prev && row[f] != null && prev[f] != null ? r1(row[f] - prev[f]) : null);
+      return { ...row, share: pct(row.threads, all.threads), d_threads: d('threads'), d_median_bh: d('median_bh'), d_within4: d('within4'), d_chased: d('chased') };
+    })));
+  },
+});
+
+dash.calc('sla', {
+  title: 'Reply-time bands',
+  description: 'Answered conversations by time to first reply in working hours, for each period, channel and query type.',
+  inputs: ['threads', 'periods'],
+  fn: (threads, periods) => {
+    const bands = [['Under 1 h', 0, 1], ['1–4 h', 1, 4], ['4 h – 1 day', 4, 9], ['1–2 days', 9, 18], ['Over 2 days', 18, Infinity]];
+    const cats = ['All', ...new Set(threads.map((t) => t.category))];
+    const out = [];
+    for (const p of periods.filter((x) => x.show)) for (const ch of ['All', 'Direct', 'via smallcase']) for (const c of cats) {
+      const v = threads.filter((t) => t.first_response_bh != null && t.day >= p.from && t.day <= p.to && (ch === 'All' || t.channel === ch) && (c === 'All' || t.category === c)).map((t) => t.first_response_bh);
+      bands.forEach(([band, lo, hi], i) => {
+        const n = v.filter((x) => x >= lo && x < hi).length;
+        out.push({ key: `${p.id}|${ch}|${c}|${i}`, period: p.id, channel: ch, category: c, band, order: i, n, share: v.length ? Math.round((n / v.length) * 1000) / 10 : null });
+      });
+    }
+    return out;
+  },
+});
+
+dash.calc('weekly', {
+  title: 'Weekly conversations',
+  description: 'Conversations opened per week (weeks start Monday) and their median first reply in working hours, by channel and query type.',
+  inputs: ['threads'],
+  fn: (threads) => {
+    const monday = (d) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7)); return t.toISOString().slice(0, 10); };
+    const med = (v) => { if (!v.length) return null; const s = [...v].sort((a, b) => a - b), m = (s.length - 1) / 2; return Math.round(((s[Math.floor(m)] + s[Math.ceil(m)]) / 2) * 10) / 10; };
+    const weeks = [...new Set(threads.map((t) => monday(t.day)))].sort();
+    const cats = ['All', ...new Set(threads.map((t) => t.category))];
+    const out = [];
+    for (const w of weeks) for (const ch of ['All', 'Direct', 'via smallcase']) for (const c of cats) {
+      const rows = threads.filter((t) => monday(t.day) === w && (ch === 'All' || t.channel === ch) && (c === 'All' || t.category === c));
+      const fr = rows.map((t) => t.first_response_bh).filter((v) => v != null);
+      out.push({ key: `${w}|${ch}|${c}`, week: w, channel: ch, category: c, threads: rows.length, answered: fr.length, median_bh: med(fr) });
+    }
+    return out;
+  },
+});
+
+dash.calc('heat', {
+  title: 'Arrival times',
+  description: 'New client conversations by weekday and hour (IST) for each period.',
+  inputs: ['threads', 'periods'],
+  fn: (threads, periods) => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const out = [];
+    for (const p of periods.filter((x) => x.show)) {
+      const rows = threads.filter((t) => t.day >= p.from && t.day <= p.to);
+      days.forEach((wd) => { for (let h = 0; h < 24; h++) out.push({ key: `${p.id}|${wd}|${h}`, period: p.id, weekday: wd, hour: h, n: rows.filter((t) => t.weekday === wd && t.hour === h).length }); });
+    }
+    return out;
+  },
+});
+
+dash.calc('ageing', {
+  title: 'Pending by age',
+  description: 'Conversations with no email reply on record yet, by days waiting, for each channel and query type.',
+  inputs: ['threads'],
+  fn: (threads) => {
+    const bands = [['Under 1 day', 0, 1], ['1–3 days', 1, 3], ['3–7 days', 3, 7], ['7–30 days', 7, 30], ['Over 30 days', 30, Infinity]];
+    const cats = ['All', ...new Set(threads.map((t) => t.category))];
+    const open = threads.filter((t) => t.status === 'Awaiting our reply');
+    const out = [];
+    for (const ch of ['All', 'Direct', 'via smallcase']) for (const c of cats) {
+      const v = open.filter((t) => (ch === 'All' || t.channel === ch) && (c === 'All' || t.category === c));
+      bands.forEach(([band, lo, hi], i) => out.push({ key: `${ch}|${c}|${i}`, channel: ch, category: c, band, order: i, n: v.filter((t) => t.waiting_days >= lo && t.waiting_days < hi).length }));
+    }
+    return out;
+  },
+});
+
+dash.calc('clients', {
+  title: 'Conversations per client',
+  description: 'For each client address: conversations, chasers, conversations with no reply on record, most common query type and last email date.',
+  inputs: ['threads'],
+  fn: (threads) => {
+    const by = new Map();
+    for (const t of threads) { if (!by.has(t.client)) by.set(t.client, []); by.get(t.client).push(t); }
+    return [...by].map(([client, rows]) => {
+      const cats = {};
+      rows.forEach((t) => { cats[t.category] = (cats[t.category] || 0) + 1; });
+      return {
+        client, threads: rows.length,
+        chasers: rows.reduce((s, t) => s + t.chasers, 0),
+        awaiting: rows.filter((t) => t.status === 'Awaiting our reply').length,
+        main_category: Object.entries(cats).sort((a, b) => b[1] - a[1])[0][0],
+        last_activity: rows.map((t) => t.last_activity).sort().pop(),
+      };
+    }).sort((a, b) => b.threads - a.threads || b.chasers - a.chasers);
+  },
+});
+</script>
+
+<script>
+// Filters, tabs and shared helpers
+window.nv = (() => {
+  const $ = (s) => document.querySelector(s);
+  const P = () => ({ period: 'all', channel: 'All', category: 'All', ...dash.params() });
+  const enc = (s) => String(s).replace(/%/g, '%25').replace(/&/g, '%26').replace(/=/g, '%3D');
+  const key = (p = P()) => `${p.period}|${p.channel}|${p.category}`;
+  const fmt = d3.format(',');
+  const ok = (id) => dash.data(id).status === 'ok';
+  const fail = (el, id) => {
+    const s = dash.data(id).status;
+    if (s === 'error' || s === 'connect' || s === 'declined' || s === 'missing') {
+      el.classList.remove('dash-skeleton');
+      el.replaceChildren(Object.assign(document.createElement('div'), { className: 'nv-fail', textContent: 'Failed to load' }));
+      return true;
+    }
+    if (s !== 'ok') { el.replaceChildren(); el.classList.add('dash-skeleton'); return true; }
+    el.classList.remove('dash-skeleton');
+    return false;
+  };
+  const tip = (box) => {
+    let t = box.querySelector('.nv-tt');
+    if (!t) { t = document.createElement('div'); t.className = 'nv-tt'; t.hidden = true; box.appendChild(t); }
+    return {
+      show(event, lines) {
+        t.replaceChildren(...lines.map(([cls, text]) => Object.assign(document.createElement('div'), { className: cls, textContent: text })));
+        t.hidden = false;
+        const r = box.getBoundingClientRect(), [x, y] = d3.pointer(event, box);
+        const w = t.offsetWidth, h = t.offsetHeight;
+        t.style.left = Math.max(0, Math.min(r.width - w, x + 12)) + 'px';
+        t.style.top = Math.max(0, y - h - 8) + 'px';
+      },
+      hide() { t.hidden = true; },
+    };
+  };
+  const cleanAxis = (g) => g.attr('font-size', null).attr('font-family', null)
+    .call((s) => s.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'))
+    .call((s) => s.selectAll('line').attr('stroke', 'var(--cds-chart-grid)'))
+    .call((s) => s.select('.domain').attr('stroke', 'var(--cds-chart-axis)'));
+  const weekFmt = (w) => d3.utcFormat('%b %-d')(new Date(w + 'T00:00:00Z'));
+  const dayFmt = (d) => d3.utcFormat('%b %-d')(new Date(d + 'T00:00:00Z'));
+
+  // Sortable, searchable table drawing rows with words only
+  const table = (sel, { rows, cols, keyOf, search, defaultSort, onRow, hot }) => {
+    const tbl = $(sel);
+    const st = tbl._st || (tbl._st = { sort: defaultSort });
+    if (!tbl._wired) {
+      tbl._wired = true;
+      tbl.querySelectorAll('th').forEach((th) => th.querySelector('button').addEventListener('click', () => {
+        const f = th.dataset.field;
+        st.sort = st.sort && st.sort[0] === f ? [f, -st.sort[1]] : [f, th.classList.contains('num') ? -1 : 1];
+        tbl._redraw && tbl._redraw();
+      }));
+      if (onRow) tbl.addEventListener('click', (e) => { const tr = e.target.closest('tr[data-key]'); if (tr) onRow(tr.dataset.key); });
+    }
+    tbl._redraw = () => {
+      const q = (search && search.value || '').trim().toLowerCase();
+      let r = q ? rows.filter((d) => cols.some((c) => String(d[c.f] ?? '').toLowerCase().includes(q))) : [...rows];
+      if (st.sort) {
+        const [f, dir] = st.sort;
+        r.sort((a, b) => { const x = a[f], y = b[f]; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * dir; });
+      }
+      tbl.querySelectorAll('th').forEach((th) => (st.sort && th.dataset.field === st.sort[0]) ? th.setAttribute('aria-sort', st.sort[1] > 0 ? 'ascending' : 'descending') : th.removeAttribute('aria-sort'));
+      d3.select(tbl).select('tbody').selectAll('tr').data(r, keyOf).join('tr')
+        .attr('data-key', keyOf).attr('class', onRow ? 'click' : null)
+        .each(function (d) {
+          d3.select(this).selectAll('td').data(cols).join('td')
+            .attr('class', (c) => [c.num ? 'num' : '', c.f === 'subject' ? 'subj' : '', hot && hot(d, c) ? 'hot' : ''].join(' ').trim() || null)
+            .text((c) => (d[c.f] == null || d[c.f] === '' ? '' : d[c.f]));
+        });
+    };
+    tbl._redraw();
+  };
+
+  // Tabs
+  const pages = ['overview', 'queue', 'types', 'chasers', 'workload', 'clients', 'method'];
+  let current = 'overview';
+  const show = (id, link = true) => {
+    if (!pages.includes(id)) return;
+    current = id;
+    pages.forEach((p) => { document.getElementById(p).hidden = p !== id; document.getElementById('tab-' + p).setAttribute('aria-selected', String(p === id)); });
+    if (link) dash.setLink(id);
+    window.nvDraw && window.nvDraw();
+  };
+  document.querySelectorAll('.nv-tab').forEach((b) => b.addEventListener('click', () => show(b.dataset.page)));
+
+  // Filters
+  const fPeriod = $('#f-period'), fChannel = $('#f-channel'), fCat = $('#f-category');
+  fPeriod.addEventListener('change', () => dash.setParams({ period: fPeriod.value }));
+  fChannel.addEventListener('change', () => dash.setParams({ channel: fChannel.value }));
+  fCat.addEventListener('change', () => dash.setParams({ category: fCat.value }));
+  $('#f-reset').addEventListener('click', () => { dash.resetParams(); dash.setParams({ period: 'all', channel: 'All', category: 'All' }); });
+  const syncFilters = () => {
+    const p = P();
+    if (ok('periods')) fPeriod.replaceChildren(...dash.data('periods').data.filter((r) => r.show).map((r) => new Option(r.label, r.id)));
+    if (ok('summary')) {
+      const cats = [...new Set(dash.data('summary').data.map((r) => r.category))].filter((c) => c !== 'All').sort();
+      fCat.replaceChildren(new Option('All query types', 'All'), ...cats.map((c) => new Option(c, c)));
+    }
+    fPeriod.value = p.period; fChannel.value = p.channel; fCat.value = p.category;
+  };
+
+  return { $, P, enc, key, fmt, ok, fail, tip, cleanAxis, weekFmt, dayFmt, table, show, current: () => current, syncFilters };
+})();
+</script>
+
+<script>
+// Email previews behind any number: a dialog listing the matching conversations
+window.nvDrill = (() => {
+  const { $, P, enc, key, fmt } = window.nv;
+  const dlg = $('#drill'), list = $('#drill-list'), titleEl = $('#drill-title'), countEl = $('#drill-count'), subEl = $('#drill-sub');
+  const search = $('#drill-search'), more = $('#drill-more'), filterBtn = $('#drill-filter');
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const PAGE = 100;
+  let rows = [], shown = PAGE, cat = null;
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const when = (s) => { if (!s) return ''; const [d, t] = String(s).split(/[T ]/); const [y, m, dd] = d.split('-'); return `${+dd} ${MON[+m - 1]} ${y}${t ? ', ' + t : ''}`; };
+  const threads = () => (dash.data('threads').status === 'ok' ? dash.data('threads').data : []);
+  const period = () => (dash.data('periods').status === 'ok' ? dash.data('periods').data.find((r) => r.id === P().period) : null);
+  // Same filter logic as the calcs, so each list matches the number clicked
+  const match = (t, { usePeriod = true, useChannel = true, useCategory = true } = {}) => {
+    const p = P(), pr = usePeriod ? period() : null;
+    return (!pr || (t.day >= pr.from && t.day <= pr.to)) && (!useChannel || p.channel === 'All' || t.channel === p.channel) && (!useCategory || p.category === 'All' || t.category === p.category);
+  };
+  const scope = ({ usePeriod = true, useChannel = true, useCategory = true } = {}) => {
+    const p = P(), bits = [];
+    if (usePeriod) bits.push(period()?.label || 'All time');
+    if (useChannel && p.channel !== 'All') bits.push(p.channel === 'Direct' ? 'direct from client' : 'handed over by smallcase');
+    if (useCategory && p.category !== 'All') bits.push(p.category);
+    return bits.join(' · ');
+  };
+  const slowest = (a, b) => (b.first_response_bh ?? -1) - (a.first_response_bh ?? -1);
+  const newest = (a, b) => (a.opened < b.opened ? 1 : a.opened > b.opened ? -1 : 0);
+  const longestWait = (a, b) => (b.waiting_days ?? 0) - (a.waiting_days ?? 0);
+
+  const item = (t) => {
+    const a = el('article', 'nv-mail');
+    const top = el('div', 'nv-mail-top');
+    const waiting = t.status === 'Awaiting our reply';
+    top.append(el('b', null, t.client), el('span', null, 'Opened ' + when(t.opened)),
+      el('span', waiting ? 'hot' : null, waiting ? `No reply yet, waiting ${t.waiting_days} days` : t.status));
+    if (t.first_response_bh != null) top.append(el('span', t.first_response_bh > 9 ? 'hot' : null, `First reply in ${t.first_response_bh} working h`));
+    if (t.chasers) top.append(el('span', t.chasers >= 2 ? 'hot' : null, `${t.chasers} chaser${t.chasers > 1 ? 's' : ''}`));
+    top.append(el('span', null, t.category), el('span', null, t.channel));
+    if (t.ticket) top.append(el('span', null, t.ticket));
+    a.append(top, el('div', 'nv-mail-subj', t.subject));
+    const msg = (label, at, text) => {
+      if (!text) return;
+      const p = el('p', 'nv-mail-body');
+      p.append(el('span', 'nv-mail-lbl', label + (at ? ' · ' + when(at) : '')), el('span', null, text));
+      a.append(p);
+    };
+    msg('First message', t.opened, t.first_preview || '(no text in the preview)');
+    msg('Latest from client', t.last_client_at, t.last_preview);
+    msg('Our last reply', t.last_reply_at, t.last_reply_preview);
+    return a;
+  };
+
+  const draw = () => {
+    const q = search.value.trim().toLowerCase();
+    const r = q ? rows.filter((t) => [t.client, t.subject, t.ticket, t.first_preview, t.last_preview, t.last_reply_preview].some((v) => String(v || '').toLowerCase().includes(q))) : rows;
+    list.replaceChildren(...r.slice(0, shown).map(item));
+    if (!r.length) list.append(el('p', 'nv-note', q ? 'No emails match this search.' : 'No conversations here.'));
+    more.hidden = r.length <= shown;
+    more.textContent = `Show more (${r.length - shown} left)`;
+  };
+
+  // spec: {title, rows, sort?, note?, mark?: {source, field, where}, category?}
+  const open = (spec) => {
+    rows = [...spec.rows].sort(spec.sort || newest);
+    shown = PAGE; search.value = ''; cat = spec.category || null;
+    titleEl.textContent = spec.title;
+    const n = el('span', null, fmt(rows.length));
+    if (spec.mark) { n.dataset.source = spec.mark.source; n.dataset.field = spec.mark.field; n.dataset.where = spec.mark.where; }
+    countEl.replaceChildren(n, rows.length === 1 ? ' conversation' : ' conversations');
+    subEl.textContent = spec.note ? ' · ' + spec.note : '';
+    filterBtn.hidden = !cat || P().category === cat;
+    draw();
+    if (!dlg.open) dlg.showModal();
+    list.scrollTop = 0;
+  };
+
+  search.addEventListener('input', () => { shown = PAGE; draw(); });
+  more.addEventListener('click', () => { shown += PAGE; draw(); });
+  $('#drill-close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  filterBtn.addEventListener('click', () => { dash.setParams({ category: cat }); dlg.close(); });
+
+  // Make an element act as a button
+  const clickable = (node, fn) => {
+    if (node._nvClick) { node._nvClick = fn; return; }
+    node._nvClick = fn;
+    node.classList.add('click'); node.tabIndex = 0; node.setAttribute('role', 'button');
+    node.addEventListener('click', () => node._nvClick());
+    node.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); node._nvClick(); } });
+  };
+
+  const sumMark = (field) => ({ source: 'summary', field, where: 'key=' + enc(key()) });
+
+  // Overview cards
+  const kpi = {
+    'kpi-threads': () => ({ title: 'Client conversations', rows: threads().filter((t) => match(t)), note: scope(), mark: sumMark('threads') }),
+    'kpi-median': () => ({ title: 'Answered conversations, slowest first reply first', rows: threads().filter((t) => match(t) && t.first_response_bh != null), sort: slowest, note: scope(), mark: sumMark('answered') }),
+    'kpi-w4': () => ({ title: 'First reply took more than 4 working hours', rows: threads().filter((t) => match(t) && t.first_response_bh > 4), sort: slowest, note: scope() }),
+    'kpi-w9': () => ({ title: 'First reply took more than 1 working day', rows: threads().filter((t) => match(t) && t.first_response_bh > 9), sort: slowest, note: scope() }),
+    'kpi-chased': () => ({ title: 'Conversations where the client chased', rows: threads().filter((t) => match(t) && t.chasers > 0), sort: (a, b) => b.chasers - a.chasers, note: scope(), mark: sumMark('chased') }),
+    'kpi-awaiting': () => ({ title: 'No reply on record yet', rows: threads().filter((t) => match(t) && t.status === 'Awaiting our reply'), sort: longestWait, note: scope(), mark: sumMark('awaiting') }),
+  };
+  Object.entries(kpi).forEach(([id, fn]) => clickable(document.getElementById(id), () => open(fn())));
+
+  const SLA = [[0, 1], [1, 4], [4, 9], [9, 18], [18, Infinity]];
+  const AGE = [[0, 1], [1, 3], [3, 7], [7, 30], [30, Infinity]];
+  const weekOf = (d) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7)); return t.toISOString().slice(0, 10); };
+  const day = (d) => when(d).replace(/, .*$/, '');
+
+  return {
+    open, clickable,
+    sla: (r) => { const [lo, hi] = SLA[r.order]; open({ title: `First reply in ${r.band.toLowerCase()} (working hours)`, rows: threads().filter((t) => match(t) && t.first_response_bh != null && t.first_response_bh >= lo && t.first_response_bh < hi), sort: slowest, note: scope(), mark: { source: 'sla', field: 'n', where: 'key=' + enc(r.key) } }); },
+    week: (r, category) => open({ title: `Conversations opened in the week of ${day(r.week)}`, rows: threads().filter((t) => weekOf(t.day) === r.week && match(t, { usePeriod: false, useCategory: !category }) && (!category || t.category === category)), sort: slowest, note: [scope({ usePeriod: false, useCategory: !category }), category].filter(Boolean).join(' · '), mark: { source: 'weekly', field: 'threads', where: 'key=' + enc(r.key) }, category }),
+    ageing: (r) => { const [lo, hi] = AGE[r.order]; open({ title: `Waiting for our reply: ${r.band.toLowerCase()}`, rows: threads().filter((t) => t.status === 'Awaiting our reply' && match(t, { usePeriod: false }) && t.waiting_days >= lo && t.waiting_days < hi), sort: longestWait, note: scope({ usePeriod: false }) || 'All conversations', mark: { source: 'ageing', field: 'n', where: 'key=' + enc(r.key) } }); },
+    category: (r) => open({ title: r.category, rows: threads().filter((t) => match(t, { useCategory: false }) && t.category === r.category), sort: newest, note: scope({ useCategory: false }), mark: { source: 'summary', field: 'threads', where: 'key=' + enc(r.key) }, category: r.category }),
+    heat: (r) => open({ title: `New conversations on ${r.weekday}, ${String(r.hour).padStart(2, '0')}:00–${String(r.hour + 1).padStart(2, '0')}:00`, rows: threads().filter((t) => match(t, { useChannel: false, useCategory: false }) && t.weekday === r.weekday && t.hour === r.hour), note: scope({ useChannel: false, useCategory: false }), mark: { source: 'heat', field: 'n', where: 'key=' + enc(r.key) } }),
+    day: (d) => open({ title: `Conversations opened on ${day(d)}`, rows: threads().filter((t) => t.day === d), note: 'new conversations that day; the chart counts every email' }),
+    thread: (id) => { const t = threads().find((x) => x.id === id); if (t) open({ title: t.subject, rows: [t] }); },
+    client: (c) => open({ title: 'Conversations with ' + c, rows: threads().filter((t) => t.client === c), mark: { source: 'clients', field: 'threads', where: 'client=' + enc(c) } }),
+  };
+})();
+</script>
+
+<script>
+// Header, KPIs and Overview charts
+(() => {
+  const { $, P, enc, key, fmt, ok, fail, tip, cleanAxis, weekFmt } = window.nv;
+
+  const header = () => {
+    const take = $('#takeaway');
+    if (!ok('summary') || !ok('periods')) { take.classList.add('dash-skeleton'); return; }
+    take.classList.remove('dash-skeleton');
+    const p = P(), k = key(p);
+    const rows = dash.data('summary').data;
+    const row = rows.find((r) => r.key === k);
+    const label = dash.data('periods').data.find((r) => r.id === p.period)?.label ?? '';
+    const top = rows.filter((r) => r.period === p.period && r.channel === p.channel && r.category !== 'All').sort((a, b) => b.threads - a.threads)[0];
+    const mark = (field, k2, text) => { const s = document.createElement('span'); s.dataset.source = 'summary'; s.dataset.field = field; s.dataset.where = 'key=' + enc(k2); s.textContent = text; return s; };
+    if (!row || !row.threads) { take.textContent = 'No client conversations match these filters.'; return; }
+    const parts = [label + ': ', mark('threads', k, fmt(row.threads)), ' client conversations. Median first reply ', mark('median_bh', k, row.median_bh ?? '—'), ' working hours, ', mark('within9', k, row.within9 ?? '—'), '% answered within a working day.'];
+    if (p.category === 'All' && top) parts.push(' Most common: ', mark('category', top.key, top.category), ' (', mark('share', top.key, top.share), '%).');
+    take.replaceChildren(...parts);
+  };
+
+  const kpis = () => {
+    const k = key();
+    const row = ok('summary') ? dash.data('summary').data.find((r) => r.key === k) : null;
+    const prevLabel = { last_30: 'previous 30 days', last_7: 'previous 7 days' }[P().period] || (P().period.startsWith('m') ? 'previous month' : '');
+    document.querySelectorAll('#kpis .nv-kpi').forEach((card) => {
+      const big = card.querySelector('[data-source]');
+      big.dataset.where = 'key=' + enc(k);
+      big.classList.toggle('dash-skeleton', !ok('summary'));
+      const v = row ? row[big.dataset.field] : null;
+      big.textContent = v == null ? '—' : (big.dataset.field === 'threads' ? fmt(v) : String(v));
+      const dEl = card.querySelector('.nv-delta[data-k]');
+      if (!dEl) return;
+      dEl.replaceChildren();
+      const dk = dEl.dataset.k, dv = row ? row[dk] : null;
+      if (dv == null || !prevLabel) return;
+      const lowerIsBetter = dk === 'd_median_bh' || dk === 'd_chased';
+      const good = dv === 0 ? null : (dv < 0) === lowerIsBetter;
+      const s = document.createElement('span');
+      s.dataset.source = 'summary'; s.dataset.field = dk; s.dataset.where = 'key=' + enc(k);
+      s.className = good == null ? '' : good ? 'good' : 'bad';
+      s.textContent = (dv > 0 ? '+' : '') + dv + (dk === 'd_within4' ? ' pts' : dk === 'd_median_bh' ? ' h' : '');
+      dEl.append(s, ' vs ' + prevLabel);
+    });
+  };
+
+  const trend = () => {
+    const box = $('#chart-trend');
+    if (fail(box, 'weekly')) return;
+    const p = P();
+    const rows = dash.data('weekly').data.filter((r) => r.channel === p.channel && r.category === p.category);
+    const W = box.clientWidth, H = 300, m = { t: 16, r: 16, b: 28, l: 36 };
+    box.replaceChildren();
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const x = d3.scalePoint(rows.map((r) => r.week), [m.l, W - m.r]).padding(0.3);
+    const vals = rows.map((r) => r.median_bh).filter((v) => v != null);
+    const y = d3.scaleLinear([0, Math.max(6, d3.max(vals) || 0) * 1.1], [H - m.b, m.t]).nice();
+    const every = Math.ceil(rows.length / Math.max(2, Math.floor((W - m.l) / 70)));
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickValues(rows.map((r) => r.week).filter((_, i) => i % every === 0)).tickFormat(weekFmt).tickSizeOuter(0)).call(cleanAxis);
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r))).call(cleanAxis).call((g) => g.select('.domain').remove());
+    svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(4)).attr('y2', y(4)).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 4');
+    svg.append('text').attr('x', W - m.r).attr('y', y(4) - 4).attr('text-anchor', 'end').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text('4 h target');
+    const pts = rows.filter((r) => r.median_bh != null);
+    svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', dash.colors[0]).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+      .attr('d', d3.line().x((r) => x(r.week)).y((r) => y(r.median_bh)));
+    const dots = svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (r) => x(r.week)).attr('cy', (r) => y(r.median_bh)).attr('r', 3).attr('fill', dash.colors[0]);
+    const t = tip(box);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .style('cursor', 'pointer')
+      .on('click', (event) => { const [mx] = d3.pointer(event); const r = pts.reduce((a, b) => (Math.abs(x(b.week) - mx) < Math.abs(x(a.week) - mx) ? b : a), pts[0]); if (r) window.nvDrill.week(r); })
+      .on('mousemove', (event) => {
+        const [mx] = d3.pointer(event);
+        const r = pts.reduce((a, b) => (Math.abs(x(b.week) - mx) < Math.abs(x(a.week) - mx) ? b : a), pts[0]);
+        if (!r) return;
+        dots.attr('r', (d) => (d === r ? 5 : 3));
+        t.show(event, [['k', 'Week of ' + weekFmt(r.week)], ['', `Median first reply: ${r.median_bh} working h`], ['', `${r.answered} answered of ${r.threads} opened`]]);
+      })
+      .on('mouseleave', () => { dots.attr('r', 3); t.hide(); });
+  };
+
+  const sla = () => {
+    const box = $('#chart-sla');
+    if (fail(box, 'sla')) return;
+    const k = key();
+    const rows = dash.data('sla').data.filter((r) => `${r.period}|${r.channel}|${r.category}` === k).sort((a, b) => a.order - b.order);
+    box.replaceChildren();
+    if (!rows.some((r) => r.n)) { box.append(Object.assign(document.createElement('p'), { className: 'nv-note', textContent: 'No answered conversations match these filters.' })); return; }
+    const W = box.clientWidth, H = 220, m = { t: 8, r: 64, b: 8, l: 96 };
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleBand(rows.map((r) => r.band), [m.t, H - m.b]).padding(0.3);
+    const x = d3.scaleLinear([0, Math.max(1, d3.max(rows, (r) => r.share))], [m.l, W - m.r]);
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', m.l - 8).attr('y', (r) => y(r.band) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((r) => r.band);
+    const t = tip(box);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', m.l).attr('y', (r) => y(r.band)).attr('height', Math.min(32, y.bandwidth())).attr('rx', 4)
+      .attr('width', (r) => Math.max(0, x(r.share || 0) - m.l)).attr('fill', (r) => (r.order >= 3 ? 'var(--cds-chart-status-critical)' : dash.colors[0]))
+      .style('cursor', 'pointer').on('click', (event, r) => window.nvDrill.sla(r))
+      .on('mousemove', (event, r) => t.show(event, [['k', r.band], ['', `${r.n} conversations (${r.share}%)`], ['k', 'Click to read them']])).on('mouseleave', () => t.hide());
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', (r) => x(r.share || 0) + 6).attr('y', (r) => y(r.band) + Math.min(32, y.bandwidth()) / 2).attr('dy', '0.35em')
+      .attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text((r) => `${r.share ?? 0}%`);
+  };
+
+  const weekly = () => {
+    const box = $('#chart-weekly');
+    if (fail(box, 'weekly')) return;
+    const p = P();
+    const rows = dash.data('weekly').data.filter((r) => r.channel === p.channel && r.category === p.category);
+    const W = box.clientWidth, H = 220, m = { t: 12, r: 12, b: 28, l: 36 };
+    box.replaceChildren();
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const x = d3.scaleBand(rows.map((r) => r.week), [m.l, W - m.r]).padding(0.25);
+    const y = d3.scaleLinear([0, Math.max(5, d3.max(rows, (r) => r.threads))], [H - m.b, m.t]).nice();
+    const every = Math.ceil(rows.length / Math.max(2, Math.floor((W - m.l) / 70)));
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickValues(rows.map((r) => r.week).filter((_, i) => i % every === 0)).tickFormat(weekFmt).tickSizeOuter(0)).call(cleanAxis);
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W - m.l - m.r))).call(cleanAxis).call((g) => g.select('.domain').remove());
+    const t = tip(box);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.week) + Math.max(0, (x.bandwidth() - 32) / 2)).attr('width', Math.min(32, x.bandwidth()))
+      .attr('y', (r) => y(r.threads)).attr('height', (r) => y(0) - y(r.threads)).attr('rx', 4).attr('fill', dash.colors[0])
+      .style('cursor', 'pointer').on('click', (event, r) => window.nvDrill.week(r))
+      .on('mousemove', (event, r) => t.show(event, [['k', 'Week of ' + weekFmt(r.week)], ['', `${r.threads} conversations opened`], ['k', 'Click to read them']])).on('mouseleave', () => t.hide());
+  };
+
+  window.nvOverview = () => { header(); kpis(); if (window.nv.current() === 'overview') { trend(); sla(); weekly(); } };
+})();
+</script>
+
+<script>
+// Pending, query types and chasers
+(() => {
+  const { $, P, enc, key, ok, fail, tip, cleanAxis, weekFmt, table } = window.nv;
+
+  const ageing = () => {
+    const box = $('#ageing');
+    if (fail(box, 'ageing')) return;
+    const p = P();
+    const rows = dash.data('ageing').data.filter((r) => r.channel === p.channel && r.category === p.category).sort((a, b) => a.order - b.order);
+    box.replaceChildren(...rows.map((r) => {
+      const chip = document.createElement('div');
+      chip.className = 'nv-chip' + (r.order >= 3 && r.n ? ' warn' : '');
+      const l = Object.assign(document.createElement('span'), { textContent: r.band });
+      const v = Object.assign(document.createElement('span'), { className: 'nv-big', textContent: String(r.n) });
+      v.dataset.source = 'ageing'; v.dataset.field = 'n'; v.dataset.where = 'key=' + enc(r.key);
+      chip.append(l, v);
+      window.nvDrill.clickable(chip, () => window.nvDrill.ageing(r));
+      return chip;
+    }));
+  };
+
+  const queue = () => {
+    if (!ok('threads')) return;
+    const p = P();
+    const rows = dash.data('threads').data.filter((t) => t.status === 'Awaiting our reply' && (p.channel === 'All' || t.channel === p.channel) && (p.category === 'All' || t.category === p.category));
+    table('#t-queue', {
+      rows, keyOf: (d) => d.id, search: $('#q-search'), defaultSort: ['waiting_days', 1], onRow: (id) => window.nvDrill.thread(id),
+      cols: [{ f: 'waiting_days', num: true }, { f: 'day' }, { f: 'client' }, { f: 'subject' }, { f: 'category' }, { f: 'channel' }, { f: 'chasers', num: true }, { f: 'ticket' }],
+      hot: (d, c) => c.f === 'chasers' && d.chasers >= 2,
+    });
+  };
+
+  const cats = () => {
+    const box = $('#chart-cats');
+    if (fail(box, 'summary')) return;
+    const p = P();
+    const rows = dash.data('summary').data.filter((r) => r.period === p.period && r.channel === p.channel && r.category !== 'All').sort((a, b) => b.threads - a.threads);
+    const W = box.clientWidth, rowH = 30, m = { t: 4, r: 120, b: 4, l: Math.min(200, W * 0.4) };
+    const H = Math.max(220, rows.length * rowH + m.t + m.b);
+    box.replaceChildren();
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleBand(rows.map((r) => r.category), [m.t, H - m.b]).padding(0.28);
+    const x = d3.scaleLinear([0, Math.max(1, d3.max(rows, (r) => r.threads))], [m.l, W - m.r]);
+    const t = tip(box);
+    const g = svg.append('g').selectAll('g').data(rows).join('g').style('cursor', 'pointer')
+      .on('click', (event, r) => window.nvDrill.category(r))
+      .on('mousemove', (event, r) => t.show(event, [['k', r.category], ['', `${r.threads} conversations (${r.share}%)`], ['', `Median first reply ${r.median_bh ?? '—'} working h`], ['', `${r.chased} with chasers · ${r.awaiting} with no reply yet`]]))
+      .on('mouseleave', () => t.hide());
+    g.append('text').attr('x', m.l - 8).attr('y', (r) => y(r.category) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end')
+      .attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text((r) => r.category)
+      .each(function () { const el = this; let s = el.textContent; while (el.getComputedTextLength() > m.l - 12 && s.length > 4) { s = s.slice(0, -2); el.textContent = s + '…'; } });
+    g.append('rect').attr('x', m.l).attr('y', (r) => y(r.category)).attr('height', y.bandwidth()).attr('rx', 4)
+      .attr('width', (r) => Math.max(0, x(r.threads) - m.l)).attr('fill', (r) => (p.category === 'All' || p.category === r.category ? dash.colors[0] : 'var(--cds-chart-muted)'));
+    g.append('text').attr('x', (r) => x(r.threads) + 6).attr('y', (r) => y(r.category) + y.bandwidth() / 2).attr('dy', '0.35em')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((r) => `${r.threads} · ${r.median_bh ?? '—'} h`);
+  };
+
+  const catTable = () => {
+    if (!ok('summary')) return;
+    const p = P();
+    const rows = dash.data('summary').data.filter((r) => r.period === p.period && r.channel === p.channel && r.category !== 'All');
+    table('#t-cats', {
+      rows, keyOf: (d) => d.key, defaultSort: ['threads', -1], onRow: (k) => { const r = dash.data('summary').data.find((x) => x.key === k); if (r) window.nvDrill.category(r); },
+      cols: [{ f: 'category' }, { f: 'threads', num: true }, { f: 'share', num: true }, { f: 'median_bh', num: true }, { f: 'p90_bh', num: true }, { f: 'within4', num: true }, { f: 'chased', num: true }, { f: 'awaiting', num: true }, { f: 'closed', num: true }],
+    });
+  };
+
+  const multi = () => {
+    const box = $('#multi');
+    if (fail(box, 'weekly')) return;
+    const p = P();
+    const all = dash.data('weekly').data.filter((r) => r.channel === p.channel && r.category !== 'All');
+    const catsList = [...new Set(all.map((r) => r.category))].sort((a, b) => d3.sum(all.filter((r) => r.category === b), (r) => r.threads) - d3.sum(all.filter((r) => r.category === a), (r) => r.threads));
+    const ymax = Math.max(1, d3.max(all, (r) => r.threads));
+    box.replaceChildren();
+    catsList.forEach((c) => {
+      const rows = all.filter((r) => r.category === c);
+      const cell = document.createElement('div');
+      cell.append(Object.assign(document.createElement('h4'), { textContent: c }));
+      box.append(cell);
+      const W = cell.clientWidth || 240, H = 72, m = { t: 4, r: 4, b: 14, l: 4 };
+      const svg = d3.select(cell).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+      const x = d3.scaleBand(rows.map((r) => r.week), [m.l, W - m.r]).padding(0.2);
+      const y = d3.scaleLinear([0, ymax], [H - m.b, m.t]);
+      const t = tip(cell);
+      svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', 'var(--cds-chart-axis)');
+      svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.week)).attr('width', x.bandwidth()).attr('y', (r) => y(r.threads)).attr('height', (r) => y(0) - y(r.threads)).attr('rx', 2)
+        .attr('fill', p.category === 'All' || p.category === c ? dash.colors[0] : 'var(--cds-chart-muted)')
+        .style('cursor', 'pointer').on('click', (event, r) => window.nvDrill.week(r, c))
+        .on('mousemove', (event, r) => t.show(event, [['k', 'Week of ' + weekFmt(r.week)], ['', `${r.threads} conversations`]])).on('mouseleave', () => t.hide());
+      if (rows.length) {
+        svg.append('text').attr('x', m.l).attr('y', H - 2).attr('fill', 'var(--color-fg-muted)').style('font-size', '10px').text(weekFmt(rows[0].week));
+        svg.append('text').attr('x', W - m.r).attr('y', H - 2).attr('text-anchor', 'end').attr('fill', 'var(--color-fg-muted)').style('font-size', '10px').text(weekFmt(rows[rows.length - 1].week));
+      }
+    });
+  };
+
+  const chasers = () => {
+    if (!ok('threads') || !ok('periods')) return;
+    const p = P();
+    const per = dash.data('periods').data.find((r) => r.id === p.period);
+    const rows = dash.data('threads').data.filter((t) => t.chasers > 0 && (!per || (t.day >= per.from && t.day <= per.to)) && (p.channel === 'All' || t.channel === p.channel) && (p.category === 'All' || t.category === p.category));
+    table('#t-chasers', {
+      rows, keyOf: (d) => d.id, search: $('#c-search'), defaultSort: ['chasers', -1], onRow: (id) => window.nvDrill.thread(id),
+      cols: [{ f: 'chasers', num: true }, { f: 'status' }, { f: 'day' }, { f: 'client' }, { f: 'subject' }, { f: 'category' }, { f: 'first_response_bh', num: true }, { f: 'our_replies', num: true }],
+      hot: (d, c) => (c.f === 'status' && d.status === 'Awaiting our reply') || (c.f === 'chasers' && d.chasers >= 3),
+    });
+  };
+
+  $('#q-search').addEventListener('input', () => document.querySelector('#t-queue')._redraw?.());
+  $('#c-search').addEventListener('input', () => document.querySelector('#t-chasers')._redraw?.());
+
+  window.nvMiddle = () => {
+    const cur = window.nv.current();
+    if (cur === 'queue') { ageing(); queue(); }
+    if (cur === 'types') { cats(); catTable(); multi(); }
+    if (cur === 'chasers') chasers();
+  };
+})();
+</script>
+
+<script>
+// Workload and clients
+(() => {
+  const { $, P, ok, fail, tip, cleanAxis, dayFmt, table } = window.nv;
+
+  const daily = () => {
+    const box = $('#chart-daily');
+    if (fail(box, 'daily')) return;
+    const per = ok('periods') ? dash.data('periods').data.find((r) => r.id === P().period) : null;
+    const rows = dash.data('daily').data.filter((r) => !per || (r.day >= per.from && r.day <= per.to)).map((r) => ({ ...r, date: new Date(r.day + 'T00:00:00Z') }));
+    box.replaceChildren();
+    if (!rows.length) return;
+    const series = [{ f: 'client_emails', name: 'Client emails', c: dash.colors[0] }, { f: 'our_replies', name: 'Our replies', c: dash.colors[1] }];
+    const W = box.clientWidth, H = 300, m = { t: 12, r: 12, b: 28, l: 36 };
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    // End labels set the right margin
+    const probe = svg.append('text').style('font-size', 'var(--cds-font-size-caption)').text('Client emails 00');
+    m.r = probe.node().getComputedTextLength() + 14; probe.remove();
+    const x = d3.scaleUtc(d3.extent(rows, (r) => r.date), [m.l, W - m.r]);
+    const y = d3.scaleLinear([0, Math.max(5, d3.max(rows, (r) => Math.max(r.client_emails, r.our_replies)))], [H - m.b, m.t]).nice();
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - m.l - m.r) / 80))).tickFormat(d3.utcFormat('%b %-d')).tickSizeOuter(0)).call(cleanAxis);
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r))).call(cleanAxis).call((g) => g.select('.domain').remove());
+    const last = rows[rows.length - 1];
+    const ends = series.map((s) => ({ ...s, y: y(last[s.f]) }));
+    if (Math.abs(ends[0].y - ends[1].y) < 14) { const mid = (ends[0].y + ends[1].y) / 2; ends.sort((a, b) => a.y - b.y); ends[0].y = mid - 7; ends[1].y = mid + 7; }
+    series.forEach((s) => {
+      svg.append('path').datum(rows).attr('fill', 'none').attr('stroke', s.c).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('d', d3.line().x((r) => x(r.date)).y((r) => y(r[s.f])));
+    });
+    ends.forEach((s) => svg.append('text').attr('x', W - m.r + 6).attr('y', s.y).attr('dy', '0.35em').attr('fill', s.c).style('font-size', 'var(--cds-font-size-caption)').text(`${s.name} ${last[s.f]}`));
+    const rule = svg.append('line').attr('y1', m.t).attr('y2', H - m.b).attr('stroke', 'var(--cds-chart-axis)').attr('opacity', 0);
+    const t = tip(box);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('mousemove', (event) => {
+        const [mx] = d3.pointer(event);
+        const d = x.invert(mx), i = d3.bisector((r) => r.date).center(rows, d), r = rows[i];
+        rule.attr('x1', x(r.date)).attr('x2', x(r.date)).attr('opacity', 1);
+        t.show(event, [['k', dayFmt(r.day)], ...series.map((s) => ['', `${s.name}: ${r[s.f]}`]), ['', `Auto or spam: ${r.auto_or_spam}`]]);
+      })
+      .style('cursor', 'pointer')
+      .on('click', (event) => { const d = x.invert(d3.pointer(event)[0]); window.nvDrill.day(rows[d3.bisector((r) => r.date).center(rows, d)].day); })
+      .on('mouseleave', () => { rule.attr('opacity', 0); t.hide(); });
+  };
+
+  const heat = () => {
+    const box = $('#chart-heat');
+    if (fail(box, 'heat')) return;
+    const rows = dash.data('heat').data.filter((r) => r.period === P().period);
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const W = box.clientWidth, m = { t: 4, r: 4, b: 22, l: 36 };
+    const cw = (W - m.l - m.r) / 24, ch = Math.max(16, Math.min(26, cw));
+    const H = m.t + m.b + ch * 7;
+    box.replaceChildren();
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const max = Math.max(1, d3.max(rows, (r) => r.n));
+    const t = tip(box);
+    svg.append('g').selectAll('rect').data(rows).join('rect')
+      .attr('x', (r) => m.l + r.hour * cw + 1).attr('y', (r) => m.t + days.indexOf(r.weekday) * ch + 1).attr('width', Math.max(1, cw - 2)).attr('height', ch - 2).attr('rx', 2)
+      .attr('fill', (r) => (r.n ? dash.colors[0] : 'var(--color-bg)')).attr('fill-opacity', (r) => (r.n ? 0.15 + 0.85 * (r.n / max) : 1))
+      .style('cursor', (r) => (r.n ? 'pointer' : null)).on('click', (event, r) => { if (r.n) window.nvDrill.heat(r); })
+      .on('mousemove', (event, r) => t.show(event, [['k', `${r.weekday}${String(r.hour).padStart(2, '0')}:00–${String(r.hour + 1).padStart(2, '0')}:00`], ['', `${r.n} new conversations`]])).on('mouseleave', () => t.hide());
+    svg.append('g').selectAll('text').data(days).join('text').attr('x', m.l - 6).attr('y', (d, i) => m.t + i * ch + ch / 2).attr('dy', '0.35em').attr('text-anchor', 'end')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((d) => d);
+    const hours = cw < 18 ? [0, 6, 12, 18] : [0, 3, 6, 9, 12, 15, 18, 21];
+    svg.append('g').selectAll('text').data(hours).join('text').attr('x', (h) => m.l + h * cw + 2).attr('y', H - 6)
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((h) => String(h).padStart(2, '0') + ':00');
+  };
+
+  const clients = () => {
+    if (!ok('clients')) return;
+    table('#t-clients', {
+      rows: dash.data('clients').data, keyOf: (d) => d.client, search: $('#k-search'), defaultSort: ['threads', -1], onRow: (c) => window.nvDrill.client(c),
+      cols: [{ f: 'client' }, { f: 'threads', num: true }, { f: 'chasers', num: true }, { f: 'awaiting', num: true }, { f: 'main_category' }, { f: 'last_activity' }],
+      hot: (d, c) => c.f === 'awaiting' && d.awaiting > 0,
+    });
+  };
+  $('#k-search').addEventListener('input', () => document.querySelector('#t-clients')._redraw?.());
+
+  window.nvLast = () => {
+    const cur = window.nv.current();
+    if (cur === 'workload') { daily(); heat(); }
+    if (cur === 'clients') clients();
+  };
+})();
+</script>
+
+<script>
+// Draw everything
+(() => {
+  const asof = document.getElementById('asof');
+  window.nvDraw = () => {
+    window.nv.syncFilters();
+    const per = dash.data('periods');
+    if (per.status === 'ok') asof.textContent = per.data.find((r) => r.id === 'all')?.as_of ?? '—';
+    window.nvOverview(); window.nvMiddle(); window.nvLast();
+  };
+  dash.onData(window.nvDraw);
+  const named = location.hash.slice(1);
+  window.nv.show(['overview', 'queue', 'types', 'chasers', 'workload', 'clients', 'method'].includes(named) ? named : 'overview', false);
+})();
+</script>
