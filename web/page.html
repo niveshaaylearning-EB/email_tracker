@@ -23,6 +23,7 @@
 .nv-delta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-height: 1.2em; }
 .nv-delta .good { color: var(--color-ok); } .nv-delta .bad { color: var(--color-bad); }
 .nv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.nv-wide { grid-column: 1 / -1; }
 .nv-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
 .nv-card h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
 .nv-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
@@ -184,7 +185,7 @@
     </div>
     <div class="nv-kpis" id="w-kpis"></div>
     <div class="nv-grid">
-      <div class="nv-card" id="card-wthemes">
+      <div class="nv-card nv-wide" id="card-wthemes">
         <h2>What clients asked about</h2>
         <p class="nv-note">Conversations by topic. The grey tick is the previous period. Click a bar to read them.</p>
         <div class="nv-chart" id="w-themes" data-source="review"></div>
@@ -557,8 +558,10 @@ dash.calc('review', {
       [...c].sort((a, b) => b[1] - a[1]).forEach(([name, v]) => rows.push({ kind, key: kind + '|' + name, label: name, n: v, prev: P ? (pv.get(name) || 0) : null }));
     };
     group('theme', (t) => [t.theme || 'Not tagged yet']);
-    group('stock', (t) => t.stocks || []);
-    group('basket', (t) => t.baskets || []);
+    // Lists can arrive as JSON text (the claude.ai file loader turns nested arrays into text)
+    const list = (v) => { if (Array.isArray(v)) return v; if (typeof v !== 'string' || !v.trim()) return []; try { const a = JSON.parse(v); return Array.isArray(a) ? a : [v]; } catch (e) { return [v]; } };
+    group('stock', (t) => list(t.stocks));
+    group('basket', (t) => list(t.baskets));
     const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
     const faq = new Map();
     C.filter((t) => t.faq).forEach((t) => { const k = norm(t.faq); if (!faq.has(k)) faq.set(k, { text: t.faq, ids: [] }); faq.get(k).ids.push(t.id); });
@@ -597,6 +600,8 @@ window.nv = (() => {
   const enc = (s) => String(s).replace(/%/g, '%25').replace(/&/g, '%26').replace(/=/g, '%3D');
   const key = (p = P()) => `${p.period}|${p.channel}|${p.category}`;
   const fmt = d3.format(',');
+  // Stock and basket lists can arrive as JSON text (claude.ai's file loader turns nested arrays into text)
+  window.nvList = (v) => { if (Array.isArray(v)) return v; if (typeof v !== 'string' || !v.trim()) return []; try { const a = JSON.parse(v); return Array.isArray(a) ? a : [v]; } catch (e) { return [v]; } };
   const ok = (id) => dash.data(id).status === 'ok';
   const fail = (el, id) => {
     const s = dash.data(id).status;
@@ -737,7 +742,7 @@ window.nvDrill = (() => {
     if (t.ticket) top.append(el('span', null, t.ticket));
     a.append(top, el('div', 'nv-mail-subj', t.subject));
     if (t.question) {
-      const tags = [t.theme, ...(t.baskets || []), ...(t.stocks || [])].filter(Boolean).join(' · ');
+      const tags = [t.theme, ...window.nvList(t.baskets), ...window.nvList(t.stocks)].filter(Boolean).join(' · ');
       const p = el('p', 'nv-mail-body');
       p.append(el('span', 'nv-mail-lbl', 'Asked' + (tags ? ' · ' + tags : '')), el('span', null, t.question));
       a.append(p);
@@ -1253,7 +1258,9 @@ window.nvDrill = (() => {
     box.replaceChildren();
     if (!list.length) { box.append(el('p', 'nv-note', 'Nothing in this period.')); return; }
     const data = list.slice(0, max);
-    const W = box.clientWidth || 360, rowH = 28, m = { t: 4, r: 70, b: 4, l: Math.min(220, W * 0.45) };
+    // Room for the longest name (about 7px a character), up to half the width; longer ones are shortened with …
+    const W = box.clientWidth || 360, rowH = 28, longest = d3.max(data, (r) => String(r.label).length) || 10;
+    const m = { t: 4, r: 40, b: 4, l: Math.max(90, Math.min(longest * 7 + 16, W * 0.5)) };
     const H = data.length * rowH + m.t + m.b;
     const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
     const y = d3.scaleBand(data.map((r) => r.key), [m.t, H - m.b]).padding(0.25);
@@ -1279,8 +1286,8 @@ window.nvDrill = (() => {
     const R = rows(), m = meta(), T = inRange(m);
     const pick = (kind, test) => (r) => open(r.label, T.filter((t) => test(t, r.label)), r.key);
     hbar($('#w-themes'), R.filter((r) => r.kind === 'theme'), pick('theme', (t, l) => (t.theme || 'Not tagged yet') === l), 19);
-    hbar($('#w-stocks'), R.filter((r) => r.kind === 'stock'), pick('stock', (t, l) => (t.stocks || []).includes(l)), 15);
-    hbar($('#w-baskets'), R.filter((r) => r.kind === 'basket'), pick('basket', (t, l) => (t.baskets || []).includes(l)), 10);
+    hbar($('#w-stocks'), R.filter((r) => r.kind === 'stock'), pick('stock', (t, l) => window.nvList(t.stocks).includes(l)), 15);
+    hbar($('#w-baskets'), R.filter((r) => r.kind === 'basket'), pick('basket', (t, l) => window.nvList(t.baskets).includes(l)), 10);
   };
 
   const faqs = () => {
@@ -1308,7 +1315,7 @@ window.nvDrill = (() => {
     const m = meta(), T = inRange(m), q = $('#w-search').value.trim().toLowerCase();
     const R = rows().filter((r) => r.kind === 'theme');
     box.replaceChildren(...R.map((r) => {
-      const list = T.filter((t) => (t.theme || 'Not tagged yet') === r.label && (!q || `${t.question} ${t.subject} ${(t.stocks || []).join(' ')}`.toLowerCase().includes(q)));
+      const list = T.filter((t) => (t.theme || 'Not tagged yet') === r.label && (!q || `${t.question} ${t.subject} ${window.nvList(t.stocks).join(' ')} ${window.nvList(t.baskets).join(' ')}`.toLowerCase().includes(q)));
       if (!list.length) return el('span');
       const g = el('div', 'nv-qgroup');
       const h = el('h3', null, r.label + ' ');
@@ -1317,7 +1324,7 @@ window.nvDrill = (() => {
       list.sort((a, b) => (a.opened < b.opened ? -1 : 1)).forEach((t) => {
         const b = el('button', 'nv-q', t.question || t.subject);
         b.type = 'button';
-        const extra = [t.day.slice(8) + '/' + t.day.slice(5, 7), ...(t.baskets || []), ...(t.stocks || [])].join(' · ');
+        const extra = [t.day.slice(8) + '/' + t.day.slice(5, 7), ...window.nvList(t.baskets), ...window.nvList(t.stocks)].join(' · ');
         b.append(el('span', 'meta', extra));
         b.addEventListener('click', () => window.nvDrill.thread(t.id));
         g.append(b);
