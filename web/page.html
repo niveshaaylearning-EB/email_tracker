@@ -71,6 +71,15 @@
 .nv-mail-subj { font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
 .nv-mail-body { margin: 0; font-size: var(--cds-font-size-caption); line-height: 1.45; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
 .nv-mail-lbl { color: var(--color-fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
+.nv-faq { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: var(--cds-font-size-body); max-height: 26rem; overflow: auto; }
+.nv-faq li { line-height: 1.4; }
+.nv-faq .n { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-left: 6px; }
+.nv-qgroup { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--cds-gap-md); }
+.nv-qgroup h3 { margin: 0 0 4px; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.nv-qgroup h3 .n { color: var(--color-fg-muted); font-weight: 400; }
+.nv-q { all: unset; cursor: pointer; font-size: var(--cds-font-size-caption); line-height: 1.45; padding: 3px 6px; border-radius: 4px; }
+.nv-q:hover, .nv-q:focus-visible { background: var(--color-bg); outline: none; }
+.nv-q .meta { color: var(--color-fg-muted); margin-left: 6px; }
 [data-dash-source-state=empty] { color: transparent; }
 [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 .nv-fail { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: inherit; height: 100%; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
@@ -122,6 +131,7 @@
 
   <nav class="nv-tabs" role="tablist" aria-label="Sections">
     <button class="nv-tab" role="tab" id="tab-overview" data-page="overview">Overview</button>
+    <button class="nv-tab" role="tab" id="tab-review" data-page="review">Weekly review</button>
     <button class="nv-tab" role="tab" id="tab-queue" data-page="queue">Pending replies</button>
     <button class="nv-tab" role="tab" id="tab-types" data-page="types">Query types</button>
     <button class="nv-tab" role="tab" id="tab-chasers" data-page="chasers">Chasers</button>
@@ -156,6 +166,51 @@
       <h2>New conversations per week</h2>
       <p class="nv-note">Client conversations opened each week, by channel and query type filters.</p>
       <div class="nv-chart" id="chart-weekly" data-source="weekly"></div>
+    </div>
+  </section>
+
+  <!-- Weekly review -->
+  <section class="nv-page" id="review" role="tabpanel" hidden>
+    <div class="nv-card" id="card-week">
+      <div class="nv-bar">
+        <label for="w-from">From week<select id="w-from" data-source="weeks"></select></label>
+        <label for="w-to">To week<select id="w-to" data-source="weeks"></select></label>
+        <button class="nv-btn" id="w-last" type="button">Last week</button>
+        <button class="nv-btn" id="w-last4" type="button">Last 4 weeks</button>
+      </div>
+      <h2 id="w-title">How the week went</h2>
+      <p class="nv-take" id="w-story">—</p>
+      <p class="nv-note">Weeks run Sunday to Saturday; a week shows here once its Saturday is over. Compared with the same number of weeks just before. This tab ignores the filters at the top.</p>
+    </div>
+    <div class="nv-kpis" id="w-kpis"></div>
+    <div class="nv-grid">
+      <div class="nv-card" id="card-wthemes">
+        <h2>What clients asked about</h2>
+        <p class="nv-note">Conversations by topic. The grey tick is the previous period. Click a bar to read them.</p>
+        <div class="nv-chart" id="w-themes" data-source="review"></div>
+      </div>
+      <div class="nv-card" id="card-wstocks">
+        <h2>Stocks clients asked about</h2>
+        <p class="nv-note">Conversations naming each stock. Click a bar to read them.</p>
+        <div class="nv-chart" id="w-stocks" data-source="review"></div>
+      </div>
+      <div class="nv-card" id="card-wbaskets">
+        <h2>Baskets clients wrote about</h2>
+        <p class="nv-note">Conversations about each basket. Click a bar to read them.</p>
+        <div class="nv-chart" id="w-baskets" data-source="review"></div>
+      </div>
+      <div class="nv-card" id="card-wfaq">
+        <h2>Content ideas</h2>
+        <p class="nv-note">Client questions rewritten as general questions any investor might ask, for FAQs, posts and videos. Most asked first. Account-specific questions are left out.</p>
+        <div class="nv-bar"><button class="nv-btn" id="w-copy" type="button">Copy list</button><span class="nv-note" id="w-copied"></span></div>
+        <ol class="nv-faq" id="w-faq" data-source="review"></ol>
+      </div>
+    </div>
+    <div class="nv-card" id="card-wq">
+      <h2>Every question this period</h2>
+      <p class="nv-note">One line per conversation, in the client's words (shortened, without names), grouped by topic. Click one to read the emails.</p>
+      <div class="nv-bar"><input class="nv-search" id="w-search" type="search" placeholder="Search questions" aria-label="Search questions"></div>
+      <div id="w-questions" data-source="review"></div>
     </div>
   </section>
 
@@ -440,6 +495,78 @@ dash.calc('ageing', {
   },
 });
 
+dash.calc('weeks', {
+  title: 'Completed weeks',
+  description: 'Sunday-to-Saturday weeks whose Saturday is before the latest email on record. The first week is partial if the record starts mid-week.',
+  inputs: ['daily'],
+  fn: (daily) => {
+    const days = daily.map((d) => d.day).sort();
+    if (!days.length) return [];
+    const first = days[0], last = days[days.length - 1];
+    const add = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+    const sunday = (d) => add(d, -new Date(d + 'T00:00:00Z').getUTCDay());
+    const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dm = (d) => `${+d.slice(8)} ${M[+d.slice(5, 7) - 1]}`;
+    const out = [];
+    for (let s = sunday(first); add(s, 6) < last; s = add(s, 7)) {
+      const e = add(s, 6);
+      out.push({ id: s, start: s, end: e, partial: s < first, label: `${dm(s)} – ${dm(e)} ${e.slice(0, 4)}${s < first ? ' (partial)' : ''}` });
+    }
+    return out;
+  },
+});
+
+dash.calc('review', {
+  title: 'Weekly review',
+  description: 'For the chosen weeks and the same number of weeks just before: conversations, emails, reply times, open items, and conversations per topic, stock, basket and content idea (from Claude\'s tags on each conversation).',
+  inputs: ['threads', 'daily', 'weeks'],
+  fn: (threads, daily, weeks) => {
+    if (!weeks.length) return [];
+    const p = dash.params(), ids = weeks.map((w) => w.id);
+    let to = ids.includes(p.wto) ? p.wto : ids[ids.length - 1];
+    let from = ids.includes(p.wfrom) ? p.wfrom : to;
+    if (from > to) [from, to] = [to, from];
+    const i0 = ids.indexOf(from), i1 = ids.indexOf(to), n = i1 - i0 + 1;
+    const cur = { start: weeks[i0].start, end: weeks[i1].end };
+    const prev = i0 - n >= 0 ? { start: weeks[i0 - n].start, end: weeks[i0 - 1].end } : null;
+    const inR = (d, r) => r && d >= r.start && d <= r.end;
+    const C = threads.filter((t) => inR(t.day, cur)), P = prev ? threads.filter((t) => inR(t.day, prev)) : null;
+    const firstDay = {};
+    threads.forEach((t) => { if (!firstDay[t.client] || t.day < firstDay[t.client]) firstDay[t.client] = t.day; });
+    const med = (v) => { if (!v.length) return null; const s = [...v].sort((a, b) => a - b), m = (s.length - 1) / 2; return Math.round(((s[Math.floor(m)] + s[Math.ceil(m)]) / 2) * 10) / 10; };
+    const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : null);
+    const sumDaily = (r, f) => (r ? daily.filter((d) => inR(d.day, r)).reduce((s, d) => s + d[f], 0) : null);
+    const kpis = (T, r) => {
+      if (!T) return {};
+      const fr = T.map((t) => t.first_response_bh).filter((v) => v != null);
+      return {
+        conversations: T.length, client_emails: sumDaily(r, 'client_emails'), our_replies: sumDaily(r, 'our_replies'),
+        median_bh: med(fr), within4: pct(fr.filter((v) => v <= 4).length, fr.length),
+        awaiting: T.filter((t) => t.status === 'Awaiting our reply').length, chased: T.filter((t) => t.chasers > 0).length,
+        new_clients: new Set(T.filter((t) => firstDay[t.client] === t.day).map((t) => t.client)).size,
+        unhappy: T.filter((t) => t.sentiment === 'negative').length,
+      };
+    };
+    const kc = kpis(C, cur), kp = kpis(P, prev);
+    const label = n === 1 ? weeks[i0].label : `${weeks[i0].label.split(' – ')[0]} – ${weeks[i1].label.split(' – ')[1]}`;
+    const rows = [{ kind: 'meta', key: 'meta', label, from, to, weeks: n, start: cur.start, end: cur.end, prev_start: prev?.start ?? null, prev_end: prev?.end ?? null, partial: weeks.slice(i0, i1 + 1).some((w) => w.partial) }];
+    Object.keys(kc).forEach((k) => rows.push({ kind: 'kpi', key: 'kpi|' + k, label: k, value: kc[k], prev: P ? kp[k] : null }));
+    const count = (T, get) => { const m = new Map(); (T || []).forEach((t) => [...new Set(get(t))].forEach((x) => { if (x) m.set(x, (m.get(x) || 0) + 1); })); return m; };
+    const group = (kind, get) => {
+      const c = count(C, get), pv = count(P, get);
+      [...c].sort((a, b) => b[1] - a[1]).forEach(([name, v]) => rows.push({ kind, key: kind + '|' + name, label: name, n: v, prev: P ? (pv.get(name) || 0) : null }));
+    };
+    group('theme', (t) => [t.theme || 'Not tagged yet']);
+    group('stock', (t) => t.stocks || []);
+    group('basket', (t) => t.baskets || []);
+    const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+    const faq = new Map();
+    C.filter((t) => t.faq).forEach((t) => { const k = norm(t.faq); if (!faq.has(k)) faq.set(k, { text: t.faq, ids: [] }); faq.get(k).ids.push(t.id); });
+    [...faq.values()].sort((a, b) => b.ids.length - a.ids.length).forEach((f) => rows.push({ kind: 'faq', key: 'faq|' + norm(f.text), label: f.text, n: f.ids.length, ids: f.ids.join(',') }));
+    return rows;
+  },
+});
+
 dash.calc('clients', {
   title: 'Conversations per client',
   description: 'For each client address: conversations, chasers, conversations with no reply on record, most common query type and last email date.',
@@ -537,7 +664,7 @@ window.nv = (() => {
   };
 
   // Tabs
-  const pages = ['overview', 'queue', 'types', 'chasers', 'workload', 'clients', 'method'];
+  const pages = ['overview', 'review', 'queue', 'types', 'chasers', 'workload', 'clients', 'method'];
   let current = 'overview';
   const show = (id, link = true) => {
     if (!pages.includes(id)) return;
@@ -609,6 +736,12 @@ window.nvDrill = (() => {
     top.append(el('span', null, t.category), el('span', null, t.channel));
     if (t.ticket) top.append(el('span', null, t.ticket));
     a.append(top, el('div', 'nv-mail-subj', t.subject));
+    if (t.question) {
+      const tags = [t.theme, ...(t.baskets || []), ...(t.stocks || [])].filter(Boolean).join(' · ');
+      const p = el('p', 'nv-mail-body');
+      p.append(el('span', 'nv-mail-lbl', 'Asked' + (tags ? ' · ' + tags : '')), el('span', null, t.question));
+      a.append(p);
+    }
     const msg = (label, at, text) => {
       if (!text) return;
       const p = el('p', 'nv-mail-body');
@@ -1026,6 +1159,183 @@ window.nvDrill = (() => {
 </script>
 
 <script>
+// Weekly review
+(() => {
+  const { $, P, enc, fmt, ok, fail, tip } = window.nv;
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const mark = (node, key, field) => { node.dataset.source = 'review'; node.dataset.field = field; node.dataset.where = 'key=' + enc(key); return node; };
+  const rows = () => (ok('review') ? dash.data('review').data : []);
+  const meta = () => rows().find((r) => r.kind === 'meta');
+  const inRange = (m) => (ok('threads') && m ? dash.data('threads').data.filter((t) => t.day >= m.start && t.day <= m.end) : []);
+  const fW = $('#w-from'), fT = $('#w-to');
+
+  fW.addEventListener('change', () => dash.setParams({ wfrom: fW.value, wto: fT.value }));
+  fT.addEventListener('change', () => dash.setParams({ wfrom: fW.value, wto: fT.value }));
+  const ids = () => (ok('weeks') ? dash.data('weeks').data.map((w) => w.id) : []);
+  $('#w-last').addEventListener('click', () => { const i = ids(); if (i.length) dash.setParams({ wfrom: i[i.length - 1], wto: i[i.length - 1] }); });
+  $('#w-last4').addEventListener('click', () => { const i = ids(); if (i.length) dash.setParams({ wfrom: i[Math.max(0, i.length - 4)], wto: i[i.length - 1] }); });
+
+  const syncWeeks = () => {
+    if (!ok('weeks')) return;
+    const w = [...dash.data('weeks').data].reverse();
+    if (fW.options.length !== w.length) {
+      fW.replaceChildren(...w.map((x) => new Option(x.label, x.id)));
+      fT.replaceChildren(...w.map((x) => new Option(x.label, x.id)));
+    }
+    const m = meta();
+    if (m) { fW.value = m.from; fT.value = m.to; }
+  };
+
+  const open = (title, list, key, sort) => window.nvDrill.open({ title, rows: list, sort, note: meta()?.label, mark: key ? { source: 'review', field: key.startsWith('kpi|') ? 'value' : 'n', where: 'key=' + enc(key) } : null });
+
+  const KPIS = [
+    ['conversations', 'Client conversations', '', 0, (T) => T],
+    ['client_emails', 'Client emails received', '', 0, null],
+    ['our_replies', 'Replies we sent', '', 0, null],
+    ['median_bh', 'Median first reply', 'working h', -1, (T) => T.filter((t) => t.first_response_bh != null)],
+    ['within4', 'First reply within 4 working h', '%', 1, (T) => T.filter((t) => t.first_response_bh != null)],
+    ['awaiting', 'Still no email reply', '', -1, (T) => T.filter((t) => t.status === 'Awaiting our reply')],
+    ['chased', 'Conversations with chasers', '', -1, (T) => T.filter((t) => t.chasers > 0)],
+    ['new_clients', 'New clients writing in', '', 0, null],
+    ['unhappy', 'Unhappy in tone', '', -1, (T) => T.filter((t) => t.sentiment === 'negative')],
+  ];
+  const slowest = (a, b) => (b.first_response_bh ?? -1) - (a.first_response_bh ?? -1);
+
+  const kpis = () => {
+    const box = $('#w-kpis');
+    const R = rows(), m = meta();
+    box.replaceChildren(...KPIS.map(([k, label, unit, better, pick]) => {
+      const r = R.find((x) => x.key === 'kpi|' + k);
+      const card = el('div', 'nv-kpi');
+      card.id = 'wk-' + k;
+      const v = mark(el('span', 'nv-big' + (r ? '' : ' dash-skeleton'), r?.value == null ? '—' : fmt(r.value)), 'kpi|' + k, 'value');
+      const line = el('div');
+      line.append(v);
+      if (unit) line.append(el('span', 'nv-unit', unit));
+      const d = el('div', 'nv-delta');
+      if (r && r.prev != null && r.value != null) {
+        const cls = better && r.value !== r.prev ? ((r.value - r.prev) * better > 0 ? 'good' : 'bad') : '';
+        const pv = mark(el('span', cls, fmt(r.prev) + (unit === '%' ? '%' : '')), 'kpi|' + k, 'prev');
+        d.append(pv, ' the period before');
+      } else if (r) d.append('no earlier period to compare');
+      card.append(el('h3', null, label), line, d);
+      if (pick && m) window.nvDrill.clickable(card, () => open(label, pick(inRange(m)), 'kpi|' + k, k === 'median_bh' || k === 'within4' ? slowest : null));
+      return card;
+    }));
+  };
+
+  const story = () => {
+    const box = $('#w-story'), m = meta(), R = rows();
+    if (!m) { box.textContent = ok('review') ? 'No completed week yet.' : '—'; return; }
+    $('#w-title').textContent = m.weeks === 1 ? 'How the week went' : `How these ${m.weeks} weeks went`;
+    const k = (name) => R.find((r) => r.key === 'kpi|' + name);
+    const num = (r, f = 'value') => mark(el('span', null, r?.[f] == null ? '—' : fmt(r[f])), r.key, f);
+    const parts = [el('b', null, m.label + (m.partial ? ' (data starts mid-week)' : '') + ': '), num(k('conversations')), ' client conversations'];
+    const c = k('conversations');
+    if (c.prev != null) parts.push(c.value > c.prev ? ', up from ' : c.value < c.prev ? ', down from ' : ', same as ', num(c, 'prev'), ' the period before');
+    parts.push('. Median first reply ', num(k('median_bh')), ' working hours; ', num(k('awaiting')), ' still have no email reply. ');
+    const top = (kind, skip = []) => R.filter((r) => r.kind === kind && !skip.includes(r.label));
+    const th = top('theme', ['Other', 'Not tagged yet']);
+    if (th.length) {
+      parts.push('Most asked about: ');
+      th.slice(0, 3).forEach((r, i) => parts.push(i ? (i === Math.min(3, th.length) - 1 ? ' and ' : ', ') : '', el('b', null, r.label.toLowerCase()), ' (', num(r, 'n'), ')'));
+      parts.push('. ');
+    }
+    const st = top('stock'), bk = top('basket');
+    if (st.length) { parts.push('Most named stock: '); st.slice(0, 3).forEach((r, i) => parts.push(i ? ', ' : '', el('b', null, r.label), ' (', num(r, 'n'), ')')); parts.push('. '); }
+    if (bk.length) parts.push('Most discussed basket: ', el('b', null, bk[0].label), ' (', num(bk[0], 'n'), '). ');
+    parts.push(num(k('new_clients')), ' clients wrote in for the first time.');
+    box.replaceChildren(...parts);
+  };
+
+  const hbar = (box, list, onPick, max = 12) => {
+    if (fail(box, 'review')) return;
+    box.replaceChildren();
+    if (!list.length) { box.append(el('p', 'nv-note', 'Nothing in this period.')); return; }
+    const data = list.slice(0, max);
+    const W = box.clientWidth || 360, rowH = 28, m = { t: 4, r: 70, b: 4, l: Math.min(220, W * 0.45) };
+    const H = data.length * rowH + m.t + m.b;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleBand(data.map((r) => r.key), [m.t, H - m.b]).padding(0.25);
+    const x = d3.scaleLinear([0, Math.max(1, d3.max(data, (r) => Math.max(r.n, r.prev || 0)))], [m.l, W - m.r]);
+    const t = tip(box);
+    const g = svg.append('g').selectAll('g').data(data).join('g').style('cursor', 'pointer')
+      .on('click', (event, r) => onPick(r))
+      .on('mousemove', (event, r) => t.show(event, [['k', r.label], ['', `${r.n} conversations`], ...(r.prev != null ? [['', `${r.prev} the period before`]] : []), ['k', 'Click to read them']]))
+      .on('mouseleave', () => t.hide());
+    g.append('text').attr('x', m.l - 8).attr('y', (r) => y(r.key) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end')
+      .attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text((r) => r.label)
+      .each(function () { const e = this; let s = e.textContent; while (e.getComputedTextLength() > m.l - 12 && s.length > 4) { s = s.slice(0, -2); e.textContent = s + '…'; } });
+    g.append('rect').attr('x', m.l).attr('y', (r) => y(r.key)).attr('height', y.bandwidth()).attr('rx', 4)
+      .attr('width', (r) => Math.max(1, x(r.n) - m.l)).attr('fill', dash.colors[0]);
+    g.filter((r) => r.prev != null).append('line').attr('x1', (r) => x(r.prev)).attr('x2', (r) => x(r.prev))
+      .attr('y1', (r) => y(r.key) - 2).attr('y2', (r) => y(r.key) + y.bandwidth() + 2).attr('stroke', 'var(--color-fg-muted)').attr('stroke-width', 2);
+    g.append('text').attr('x', (r) => Math.max(x(r.n), r.prev != null ? x(r.prev) : 0) + 6).attr('y', (r) => y(r.key) + y.bandwidth() / 2).attr('dy', '0.35em')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((r) => r.n);
+    if (list.length > max) box.append(el('p', 'nv-note', `Showing the top ${max} of ${list.length}.`));
+  };
+
+  const charts = () => {
+    const R = rows(), m = meta(), T = inRange(m);
+    const pick = (kind, test) => (r) => open(r.label, T.filter((t) => test(t, r.label)), r.key);
+    hbar($('#w-themes'), R.filter((r) => r.kind === 'theme'), pick('theme', (t, l) => (t.theme || 'Not tagged yet') === l), 19);
+    hbar($('#w-stocks'), R.filter((r) => r.kind === 'stock'), pick('stock', (t, l) => (t.stocks || []).includes(l)), 15);
+    hbar($('#w-baskets'), R.filter((r) => r.kind === 'basket'), pick('basket', (t, l) => (t.baskets || []).includes(l)), 10);
+  };
+
+  const faqs = () => {
+    const box = $('#w-faq'), R = rows().filter((r) => r.kind === 'faq');
+    if (!ok('review')) return;
+    const byId = new Map((ok('threads') ? dash.data('threads').data : []).map((t) => [t.id, t]));
+    box.replaceChildren(...R.map((r) => {
+      const li = el('li');
+      li.append(el('span', null, r.label));
+      if (r.n > 1) li.append(mark(el('span', 'n', `asked ${r.n}×`), r.key, 'n'));
+      window.nvDrill.clickable(li, () => open(r.label, r.ids.split(',').map((id) => byId.get(id)).filter(Boolean), r.key));
+      return li;
+    }));
+    if (!R.length) box.append(el('li', 'nv-note', 'No general questions in this period.'));
+  };
+  $('#w-copy').addEventListener('click', async () => {
+    const text = rows().filter((r) => r.kind === 'faq').map((r) => `${r.label}${r.n > 1 ? ` (asked ${r.n} times)` : ''}`).join('\n');
+    try { await navigator.clipboard.writeText(text); $('#w-copied').textContent = 'Copied.'; }
+    catch (e) { $('#w-copied').textContent = 'Copying is blocked here: select the list and copy it instead.'; }
+  });
+
+  const questions = () => {
+    const box = $('#w-questions');
+    if (!ok('review') || !ok('threads')) return;
+    const m = meta(), T = inRange(m), q = $('#w-search').value.trim().toLowerCase();
+    const R = rows().filter((r) => r.kind === 'theme');
+    box.replaceChildren(...R.map((r) => {
+      const list = T.filter((t) => (t.theme || 'Not tagged yet') === r.label && (!q || `${t.question} ${t.subject} ${(t.stocks || []).join(' ')}`.toLowerCase().includes(q)));
+      if (!list.length) return el('span');
+      const g = el('div', 'nv-qgroup');
+      const h = el('h3', null, r.label + ' ');
+      h.append(mark(el('span', 'n', String(r.n)), r.key, 'n'));
+      g.append(h);
+      list.sort((a, b) => (a.opened < b.opened ? -1 : 1)).forEach((t) => {
+        const b = el('button', 'nv-q', t.question || t.subject);
+        b.type = 'button';
+        const extra = [t.day.slice(8) + '/' + t.day.slice(5, 7), ...(t.baskets || []), ...(t.stocks || [])].join(' · ');
+        b.append(el('span', 'meta', extra));
+        b.addEventListener('click', () => window.nvDrill.thread(t.id));
+        g.append(b);
+      });
+      return g;
+    }));
+  };
+  $('#w-search').addEventListener('input', questions);
+
+  window.nvReview = () => {
+    syncWeeks();
+    if (window.nv.current() !== 'review') return;
+    story(); kpis(); charts(); faqs(); questions();
+  };
+})();
+</script>
+
+<script>
 // Draw everything
 (() => {
   const asof = document.getElementById('asof');
@@ -1033,10 +1343,10 @@ window.nvDrill = (() => {
     window.nv.syncFilters();
     const per = dash.data('periods');
     if (per.status === 'ok') asof.textContent = per.data.find((r) => r.id === 'all')?.as_of ?? '—';
-    window.nvOverview(); window.nvMiddle(); window.nvLast();
+    window.nvOverview(); window.nvReview && window.nvReview(); window.nvMiddle(); window.nvLast();
   };
   dash.onData(window.nvDraw);
   const named = location.hash.slice(1);
-  window.nv.show(['overview', 'queue', 'types', 'chasers', 'workload', 'clients', 'method'].includes(named) ? named : 'overview', false);
+  window.nv.show(['overview', 'review', 'queue', 'types', 'chasers', 'workload', 'clients', 'method'].includes(named) ? named : 'overview', false);
 })();
 </script>

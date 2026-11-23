@@ -2,7 +2,7 @@
 
 **What it does:** checks the research.smallcase@niveshaay.com Inbox every 5 minutes. It uses Claude to decide whether each new client email is a **complaint** or a **query**, then puts a copy in the `Complaints` or `Queries` folder. The original stays in the Inbox. If the server is down for a while, the sorter works through everything it missed, oldest first, as soon as it is back.
 
-**It also runs the mailbox dashboard:** once a day it saves every new email in Inbox, Sent Items and Archive to a permanent record on the server. It rebuilds the reply-time numbers and serves the dashboard on a password-protected web address. Click any number to read the emails behind it.
+**It also runs the mailbox dashboard:** once a day it saves every new email in Inbox, Sent Items and Archive to a permanent record on the server. It rebuilds the reply-time numbers and serves the dashboard on a password-protected web address. Click any number to read the emails behind it. The **Weekly review** tab shows how any finished week (Sunday to Saturday), or run of weeks, went: topics, stocks and baskets clients asked about, and content ideas. New conversations are tagged for it by Claude Haiku, about ₹5–20 a month, capped by `ENRICH_MONTHLY_USD` (default $2). Set `ENRICH_ENABLED=0` to switch tagging off.
 
 **Where it runs:** as a small always-on app on our Easypanel server.
 

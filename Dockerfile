@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-COPY *.py base_request.json ./
+COPY *.py base_request.json enrich_prompt.md ./
 COPY web ./web
 
 # Sign-in, sorter progress, the permanent email record and dashboard files live here:

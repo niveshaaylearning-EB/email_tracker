@@ -25,6 +25,7 @@ os.environ.setdefault("TRACKER_DATA", str(DATA_DIR / "tracker"))
 TRACKER_DATA = Path(os.environ["TRACKER_DATA"])
 
 import dashboard_export  # noqa: E402  (both read TRACKER_DATA on import)
+import enrich  # noqa: E402
 import mailstats  # noqa: E402
 from sorter import Mailbox  # noqa: E402
 
@@ -133,6 +134,11 @@ def run_once():
             for r in rows:
                 fh.write(json.dumps(r, ensure_ascii=False) + "\n")
     merge, out = rebuild()
+    try:
+        if enrich.tag_new(TRACKER_DATA, state):
+            out = dashboard_export.main()   # include the new tags
+    except Exception:
+        log.exception("Tagging failed; the dashboard is up to date except for the Weekly review tags")
 
     latest = max((r["received"] for r in rows), default=None)
     if latest:

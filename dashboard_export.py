@@ -14,6 +14,56 @@ import mailstats as A
 OUT = A.DATA / "dashboard"
 
 
+TAGS = A.DATA / "enrich" / "tags.jsonl"
+# Spellings Claude used for the same stock or basket, mapped to one name (lower-case keys)
+ALIASES = {
+    "gc hotels": "Grand Continental Hotels", "grand continent hotels": "Grand Continental Hotels",
+    "hle glascoat": "HLE Glasscoat", "sansera": "Sansera Engineering", "acutaas": "Acutaas Chemicals",
+    "esds": "ESDS Software Solution", "genesys": "Genesys International", "krn": "KRN Heat Exchanger",
+    "ipo basket fundamental": "IPO Basket", "ai data centre value chains theme": "AI & Data Centre",
+    "ai & data center theme": "AI & Data Centre", "mid and small cap focused portfolio fundamental": "Mid & Small Cap Focused",
+    "green energy theme": "Green Energy", "niveshaay techstack": "TechStack", "tech stack": "TechStack",
+}
+
+
+def _canon(names_by_thread):
+    """One spelling per stock/basket: case and spacing differences are merged, the most used spelling wins."""
+    spellings = {}
+    for names in names_by_thread:
+        for n in names:
+            k = " ".join(n.lower().replace(".", " ").replace("ltd", " ").replace("limited", " ").split())
+            spellings.setdefault(k, Counter())[n.strip()] += 1
+    return {k: c.most_common(1)[0][0] for k, c in spellings.items()}
+
+
+def add_tags(rows):
+    """Join Claude's tags (theme, question, stocks, baskets, faq, sentiment) onto each conversation."""
+    tags = {}
+    if TAGS.exists():
+        for line in TAGS.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                t = json.loads(line)
+                for f in ("stocks", "baskets"):
+                    t[f] = [ALIASES.get(n.strip().lower(), n.strip()) for n in t.get(f) or []]
+                tags[t["id"]] = t
+    stock_names = _canon(t.get("stocks") or [] for t in tags.values())
+    basket_names = _canon(t.get("baskets") or [] for t in tags.values())
+    key = lambda n: " ".join(n.lower().replace(".", " ").replace("ltd", " ").replace("limited", " ").split())
+    for r in rows:
+        t = tags.get(r["id"])
+        if not t:
+            r.update(theme="Not tagged yet", question="", stocks=[], baskets=[], faq="", sentiment="")
+            continue
+        r.update(
+            theme=t.get("theme") or "Other",
+            question=t.get("question") or "",
+            stocks=sorted({stock_names[key(s)] for s in t.get("stocks") or [] if s.strip()}),
+            baskets=sorted({basket_names[key(b)] for b in t.get("baskets") or [] if b.strip()}),
+            faq=t.get("faq") or "",
+            sentiment=t.get("sentiment") or "",
+        )
+
+
 def main():
     rows = [json.loads(l) for l in A.MASTER.read_text(encoding="utf-8").splitlines() if l.strip()]
     # Waiting times are measured to the latest email on record, not to today,
@@ -53,6 +103,8 @@ def main():
             "last_reply_preview": t["last_reply_preview"],
             "last_reply_at": t["last_reply_at"].astimezone(A.IST).strftime("%Y-%m-%d %H:%M") if t["last_reply_at"] else "",
         })
+
+    add_tags(out)
 
     daily = Counter()
     for m in rows:
