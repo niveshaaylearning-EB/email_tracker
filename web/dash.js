@@ -49,8 +49,9 @@ window.dash = (() => {
     loader: () => {},
     onData: (fn) => { listeners.push(fn); try { fn(); } catch (e) { console.error(e); } },
     params: () => ({ ...params }),
-    setParams: (p) => { params = { ...params, ...p }; fire(); },
-    resetParams: () => { params = {}; fire(); },
+    // Calcs may read the filters (the Weekly review does), so work them out again
+    setParams: (p) => { params = { ...params, ...p }; runCalcs(); fire(); },
+    resetParams: () => { params = {}; runCalcs(); fire(); },
     setLink: (name) => { try { history.replaceState(null, '', '#' + name); } catch (e) { /* ignore */ } },
     refresh: () => load(),
   };

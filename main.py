@@ -28,7 +28,7 @@ def refresh():
     if not LOCK.acquire(blocking=False):
         return None
     try:
-        return tracker.run_once()
+        return tracker.refresh_safely()
     finally:
         LOCK.release()
 

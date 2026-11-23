@@ -73,6 +73,17 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/health":
             self._send(200, {"ok": True})
             return False
+        if LOCAL_ONLY:   # laptop mode: only reachable from this computer, no password
+            # Refuse other websites: the Host must be this computer (stops DNS-rebinding reads), and
+            # actions need a custom header, which a cross-site page can't send without our approval
+            host = (self.headers.get("Host") or "").split(":")[0]
+            if host not in ("127.0.0.1", "localhost"):
+                self._send(403, "Forbidden", "text/plain; charset=utf-8")
+                return False
+            if self.command == "POST" and self.headers.get("X-Dashboard") != "1":
+                self._send(403, "Forbidden", "text/plain; charset=utf-8")
+                return False
+            return True
         if not os.environ.get("DASHBOARD_PASSWORD"):
             self._send(503, "Set DASHBOARD_PASSWORD in Easypanel to open the dashboard.", "text/plain; charset=utf-8")
             return False
@@ -151,10 +162,16 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"message": f"Received {len(good)} emails ({bad} lines skipped). The dashboard is being rebuilt; reload it in a minute."})
 
 
-def serve(lock, refresh, tracker_data, port=None):
+LOCAL_ONLY = False
+
+
+def serve(lock, refresh, tracker_data, port=None, local_only=False):
+    """Serve the dashboard. local_only binds to 127.0.0.1 (this computer only) and needs no password."""
+    global LOCAL_ONLY
+    LOCAL_ONLY = local_only
     Handler.tracker_lock, Handler.refresh, Handler.tracker_data = lock, staticmethod(refresh), Path(tracker_data)
     port = int(port or os.environ.get("PORT", "8080"))
-    if not os.environ.get("DASHBOARD_PASSWORD"):
+    if not local_only and not os.environ.get("DASHBOARD_PASSWORD"):
         log.warning("DASHBOARD_PASSWORD is not set: the dashboard stays closed until it is")
     log.info("Dashboard on port %d", port)
-    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+    ThreadingHTTPServer(("127.0.0.1" if local_only else "0.0.0.0", port), Handler).serve_forever()

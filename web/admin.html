@@ -45,7 +45,7 @@ const $ = (id) => document.getElementById(id);
 const status = () => fetch('status', { cache: 'no-store' }).then((r) => r.json()).then((s) => { $('status').textContent = JSON.stringify(s, null, 2); }).catch((e) => { $('status').textContent = String(e); });
 status();
 $('refresh').addEventListener('click', async () => {
-  const r = await fetch('admin/refresh', { method: 'POST' });
+  const r = await fetch('admin/refresh', { method: 'POST', headers: { 'X-Dashboard': '1' } });
   $('refresh-msg').textContent = (await r.json()).message;
   setTimeout(status, 3000);
 });
@@ -53,7 +53,7 @@ $('upload').addEventListener('click', async () => {
   const f = $('file').files[0];
   if (!f) { $('upload-msg').textContent = 'Choose the file first.'; return; }
   $('upload-msg').textContent = 'Uploading…';
-  const r = await fetch('admin/seed', { method: 'POST', body: f, headers: { 'Content-Type': 'application/octet-stream' } });
+  const r = await fetch('admin/seed', { method: 'POST', body: f, headers: { 'Content-Type': 'application/octet-stream', 'X-Dashboard': '1' } });
   $('upload-msg').textContent = (await r.json()).message;
   setTimeout(status, 3000);
 });

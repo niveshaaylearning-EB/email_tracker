@@ -122,8 +122,11 @@ def run_once():
     (TRACKER_DATA / "raw").mkdir(parents=True, exist_ok=True)
     state = load_state()
     started = datetime.now(timezone.utc)
+    latest_stored = latest_in_record()
     if state.get("last_received"):
         since = datetime.fromisoformat(state["last_received"]) - OVERLAP
+    elif latest_stored:
+        since = latest_stored - OVERLAP     # e.g. the laptop record, or an uploaded history
     else:
         since = datetime.fromisoformat(os.environ.get("TRACKER_START", "2026-07-01T00:00:00Z").replace("Z", "+00:00"))
 
@@ -145,9 +148,42 @@ def run_once():
         state["last_received"] = latest.replace("Z", "+00:00")
     state["last_run"] = started.isoformat()
     state["last_result"] = {"fetched": len(rows), **merge, **(out or {})}
+    state.pop("last_error", None)
     save_state(state)
     log.info("Tracker: fetched %d, new %s, dashboard %s", len(rows), merge.get("new_emails_added"), out)
     return state["last_result"]
+
+
+def latest_in_record():
+    """Time of the newest email already in the permanent record, if any."""
+    if not mailstats.MASTER.exists():
+        return None
+    latest = None
+    with mailstats.MASTER.open(encoding="utf-8") as fh:
+        for line in fh:
+            try:
+                r = json.loads(line).get("received")
+            except json.JSONDecodeError:
+                continue
+            if r and (latest is None or r > latest):
+                latest = r
+    return datetime.fromisoformat(latest.replace("Z", "+00:00")) if latest else None
+
+
+def refresh_safely():
+    """run_once, but a failure is written to the state so the dashboard can show it."""
+    try:
+        return run_once()
+    except Exception as exc:
+        from sorter import NeedsLogin
+        msg = ("Sign-in needed: run  python cloud\\sorter.py --login  (laptop) or  python sorter.py --login  "
+               "(Easypanel console), sign in as the mailbox, then update again." if isinstance(exc, NeedsLogin)
+               else f"Update failed: {exc}")
+        state = load_state()
+        state["last_error"] = {"at": datetime.now(timezone.utc).isoformat(), "message": msg}
+        TRACKER_DATA.mkdir(parents=True, exist_ok=True)
+        save_state(state)
+        raise
 
 
 if __name__ == "__main__":

@@ -33,22 +33,62 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .dash-skeleton { color: transparent !important; background: var(--color-border-line); border-radius: 4px; }
 .sv-status { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font: var(--cds-font-size-caption)/1.4 var(--font-anthropic-sans); color: var(--color-fg-muted); margin-bottom: 12px; }
 .sv-status a { color: inherit; }
+.sv-btn { font: 600 var(--cds-font-size-body) var(--font-anthropic-sans); color: #fff; background: #2f6fdb; border: 0; border-radius: var(--cds-radius); padding: 7px 16px; cursor: pointer; }
+.sv-btn:hover { background: #2559b3; } .sv-btn:disabled { opacity: .6; cursor: progress; }
+.sv-btn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.sv-err { color: var(--color-bad); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="dash.js"></script>
 </head>
 <body>
 <div id="dash-root">
-<div class="sv-status" id="sv-status"><span id="sv-refresh">Checking when the data was last refreshed…</span><a href="admin">Admin</a></div>
+<div class="sv-status" id="sv-status">
+  <button class="sv-btn" id="sv-update" type="button">Update now</button>
+  <span id="sv-refresh">Checking when the data was last refreshed…</span>
+  <a href="admin">Admin</a>
+</div>
 <!--PAGE-->
 </div>
 <script>
-fetch('status', { cache: 'no-store' }).then((r) => r.json()).then((s) => {
-  const el = document.getElementById('sv-refresh');
-  if (!s.last_run) { el.textContent = 'First collection still running. Reload in a few minutes.'; return; }
-  const t = new Date(s.last_run).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-  el.textContent = `Updates itself every day · last refreshed ${t} IST` + (s.busy ? ' · refreshing now' : '');
-}).catch(() => {});
+(() => {
+  const el = document.getElementById('sv-refresh'), btn = document.getElementById('sv-update');
+  const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const getStatus = () => fetch('status', { cache: 'no-store' }).then((r) => r.json());
+  const show = (s) => {
+    el.className = '';
+    if (s.busy) { el.textContent = 'Updating: collecting new emails and rebuilding…'; return; }
+    if (s.last_error && (!s.last_run || s.last_error.at > s.last_run)) { el.className = 'sv-err'; el.textContent = s.last_error.message; return; }
+    if (!s.last_run) { el.textContent = 'No update has run yet. Press Update now.'; return; }
+    const r = s.last_result || {};
+    el.textContent = `Last updated ${when(s.last_run)} IST` + (r.fetched != null ? ` · ${r.new_emails_added ?? 0} new emails` : '') + (r.as_of ? ` · emails up to ${r.as_of}` : '');
+  };
+  getStatus().then(show).catch(() => { el.textContent = ''; });
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    el.className = ''; el.textContent = 'Updating: collecting new emails and rebuilding… (usually under a minute)';
+    try {
+      const before = (await getStatus()) || {};
+      const r = await fetch('admin/refresh', { method: 'POST', headers: { 'X-Dashboard': '1' } });
+      if (!r.ok && r.status !== 409) throw new Error((await r.json().catch(() => ({}))).message || r.statusText);
+      const started = Date.now();
+      let s = before;
+      while (Date.now() - started < 15 * 60 * 1000) {
+        await new Promise((res) => setTimeout(res, 3000));
+        s = await getStatus();
+        const finished = !s.busy && (s.last_run !== before.last_run || (s.last_error && s.last_error.at !== before.last_error?.at));
+        if (finished) break;
+      }
+      show(s);
+      if (!s.last_error || s.last_run > s.last_error.at) window.dash.refresh();
+    } catch (e) {
+      el.className = 'sv-err'; el.textContent = 'Update failed: ' + e.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
 </script>
 </body>
 </html>
